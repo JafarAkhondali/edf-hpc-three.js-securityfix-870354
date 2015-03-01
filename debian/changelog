@@ -1,0 +1,6 @@
+three.js (70+dfsg3-1) unstable; urgency=medium
+
+  * Initial upload (Closes: #779490).
+
+ -- David Bremner <bremner@debian.org>  Sun, 01 Mar 2015 11:47:41 +0100
+
