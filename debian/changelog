@@ -1,3 +1,9 @@
+three.js (70+dfsg3-1+c9+1) calibre9; urgency=medium
+
+  * Backport to Calibre 9
+
+ -- Rémi Palancher <remi-externe.palancher@edf.fr>  Mon, 14 Sep 2015 12:24:31 +0200
+
 three.js (70+dfsg3-1) unstable; urgency=medium
 
   * Initial upload (Closes: #779490).
