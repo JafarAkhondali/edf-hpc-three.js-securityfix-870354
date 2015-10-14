@@ -17,7 +17,6 @@ THREE.CurvePath = function () {
 };
 
 THREE.CurvePath.prototype = Object.create( THREE.Curve.prototype );
-THREE.CurvePath.prototype.constructor = THREE.CurvePath;
 
 THREE.CurvePath.prototype.add = function ( curve ) {
 
@@ -38,7 +37,7 @@ THREE.CurvePath.prototype.closePath = function() {
 	var startPoint = this.curves[0].getPoint(0);
 	var endPoint = this.curves[this.curves.length-1].getPoint(1);
 	
-	if (! startPoint.equals(endPoint)) {
+	if (!startPoint.equals(endPoint)) {
 		this.curves.push( new THREE.LineCurve(endPoint, startPoint) );
 	}
 	
@@ -198,7 +197,7 @@ THREE.CurvePath.prototype.getBoundingBox = function () {
  *	Create Geometries Helpers
  **************************************************************/
 
-/// Generate geometry from path points (for Line or Points objects)
+/// Generate geometry from path points (for Line or ParticleSystem objects)
 
 THREE.CurvePath.prototype.createPointsGeometry = function( divisions ) {
 
@@ -248,7 +247,7 @@ THREE.CurvePath.prototype.getTransformedPoints = function( segments, bends ) {
 	var oldPts = this.getPoints( segments ); // getPoints getSpacedPoints
 	var i, il;
 
-	if ( ! bends ) {
+	if ( !bends ) {
 
 		bends = this.bends;
 
@@ -270,7 +269,7 @@ THREE.CurvePath.prototype.getTransformedSpacedPoints = function( segments, bends
 
 	var i, il;
 
-	if ( ! bends ) {
+	if ( !bends ) {
 
 		bends = this.bends;
 
@@ -313,7 +312,7 @@ THREE.CurvePath.prototype.getWrapPoints = function ( oldPts, path ) {
 
 		var pathPt = path.getPoint( xNorm );
 		var normal = path.getTangent( xNorm );
-		normal.set( - normal.y, normal.x ).multiplyScalar( oldY );
+		normal.set( -normal.y, normal.x ).multiplyScalar( oldY );
 
 		p.x = pathPt.x + normal.x;
 		p.y = pathPt.y + normal.y;

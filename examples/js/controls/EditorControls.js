@@ -52,31 +52,28 @@ THREE.EditorControls = function ( object, domElement ) {
 
 	};
 
-	this.pan = function ( delta ) {
+	this.pan = function ( distance ) {
 
-		var distance = object.position.distanceTo( center );
+		normalMatrix.getNormalMatrix( object.matrix );
 
-		delta.multiplyScalar( distance * 0.001 );
-		delta.applyMatrix3( normalMatrix.getNormalMatrix( object.matrix ) );
+		distance.applyMatrix3( normalMatrix );
+		distance.multiplyScalar( vector.copy( center ).sub( object.position ).length() * 0.001 );
 
-		object.position.add( delta );
-		center.add( delta );
+		object.position.add( distance );
+		center.add( distance );
 
 		scope.dispatchEvent( changeEvent );
 
 	};
 
-	this.zoom = function ( delta ) {
+	this.zoom = function ( distance ) {
 
-		var distance = object.position.distanceTo( center );
+		normalMatrix.getNormalMatrix( object.matrix );
 
-		delta.multiplyScalar( distance * 0.001 );
+		distance.applyMatrix3( normalMatrix );
+		distance.multiplyScalar( vector.copy( center ).sub( object.position ).length() * 0.001 );
 
-		if ( delta.length() > distance ) return;
-
-		delta.applyMatrix3( normalMatrix.getNormalMatrix( object.matrix ) );
-
-		object.position.add( delta );
+		object.position.add( distance );
 
 		scope.dispatchEvent( changeEvent );
 
@@ -182,8 +179,6 @@ THREE.EditorControls = function ( object, domElement ) {
 	}
 
 	function onMouseWheel( event ) {
-
-		event.preventDefault();
 
 		// if ( scope.enabled === false ) return;
 
@@ -299,4 +294,3 @@ THREE.EditorControls = function ( object, domElement ) {
 };
 
 THREE.EditorControls.prototype = Object.create( THREE.EventDispatcher.prototype );
-THREE.EditorControls.prototype.constructor = THREE.EditorControls;

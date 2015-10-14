@@ -14,8 +14,6 @@
  *
  *  specularMap: new THREE.Texture( <Image> ),
  *
- *  alphaMap: new THREE.Texture( <Image> ),
- *
  *  envMap: new THREE.TextureCube( [posx, negx, posy, negy, posz, negz] ),
  *  combine: THREE.Multiply,
  *  reflectivity: <float>,
@@ -43,8 +41,6 @@ THREE.MeshLambertMaterial = function ( parameters ) {
 
 	THREE.Material.call( this );
 
-	this.type = 'MeshLambertMaterial';
-
 	this.color = new THREE.Color( 0xffffff ); // diffuse
 	this.ambient = new THREE.Color( 0xffffff );
 	this.emissive = new THREE.Color( 0x000000 );
@@ -57,8 +53,6 @@ THREE.MeshLambertMaterial = function ( parameters ) {
 	this.lightMap = null;
 
 	this.specularMap = null;
-
-	this.alphaMap = null;
 
 	this.envMap = null;
 	this.combine = THREE.MultiplyOperation;
@@ -85,7 +79,6 @@ THREE.MeshLambertMaterial = function ( parameters ) {
 };
 
 THREE.MeshLambertMaterial.prototype = Object.create( THREE.Material.prototype );
-THREE.MeshLambertMaterial.prototype.constructor = THREE.MeshLambertMaterial;
 
 THREE.MeshLambertMaterial.prototype.clone = function () {
 
@@ -105,8 +98,6 @@ THREE.MeshLambertMaterial.prototype.clone = function () {
 	material.lightMap = this.lightMap;
 
 	material.specularMap = this.specularMap;
-
-	material.alphaMap = this.alphaMap;
 
 	material.envMap = this.envMap;
 	material.combine = this.combine;

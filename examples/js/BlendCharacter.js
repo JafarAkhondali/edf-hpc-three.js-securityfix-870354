@@ -8,7 +8,7 @@ THREE.BlendCharacter = function () {
 	this.weightSchedule = [];
 	this.warpSchedule = [];
 
-	this.load = function ( url, onLoad ) {
+	this.load = function( url, onLoad ) {
 
 		var scope = this;
 
@@ -24,8 +24,10 @@ THREE.BlendCharacter = function () {
 
 			for ( var i = 0; i < geometry.animations.length; ++i ) {
 
+				THREE.AnimationHandler.add( geometry.animations[ i ] );
+
 				var animName = geometry.animations[ i ].name;
-				scope.animations[ animName ] = new THREE.Animation( scope, geometry.animations[ i ] );
+				scope.animations[ animName ] = new THREE.Animation( scope, animName );
 
 			}
 
@@ -193,7 +195,7 @@ THREE.BlendCharacter = function () {
 
 			if ( this.animations[ a ].isPlaying ) {
 
-				this.animations[ a ].stop();
+				this.animations[ a ].pause();
 
 			}
 
@@ -249,7 +251,6 @@ THREE.BlendCharacter = function () {
 
 
 THREE.BlendCharacter.prototype = Object.create( THREE.SkinnedMesh.prototype );
-THREE.BlendCharacter.prototype.constructor = THREE.BlendCharacter;
 
 THREE.BlendCharacter.prototype.getForward = function() {
 

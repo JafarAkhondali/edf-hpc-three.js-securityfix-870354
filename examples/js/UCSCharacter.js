@@ -41,7 +41,7 @@ THREE.UCSCharacter = function() {
 			geometry.computeBoundingBox();
 			geometry.computeVertexNormals();
 
-			//THREE.AnimationHandler.add( geometry.animation );
+			THREE.AnimationHandler.add( geometry.animation );
 
 			mesh = new THREE.SkinnedMesh( geometry, new THREE.MeshFaceMaterial() );
 			scope.root.add( mesh );
@@ -53,7 +53,7 @@ THREE.UCSCharacter = function() {
 			mesh.castShadow = true;
 			mesh.receiveShadow = true;
 
-			animation = new THREE.Animation( mesh, geometry.animation );
+			animation = new THREE.Animation( mesh, geometry.animation.name );
 			animation.play();
 			
 			scope.setSkin(0);
@@ -78,7 +78,7 @@ THREE.UCSCharacter = function() {
 	}
 	
 	function loadTextures( baseUrl, textureUrls ) {
-		var mapping = THREE.UVMapping;
+		var mapping = new THREE.UVMapping();
 		var textures = [];
 
 		for ( var i = 0; i < textureUrls.length; i ++ ) {

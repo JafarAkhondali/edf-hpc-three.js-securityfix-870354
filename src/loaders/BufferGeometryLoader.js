@@ -16,13 +16,13 @@ THREE.BufferGeometryLoader.prototype = {
 
 		var scope = this;
 
-		var loader = new THREE.XHRLoader( scope.manager );
+		var loader = new THREE.XHRLoader();
 		loader.setCrossOrigin( this.crossOrigin );
 		loader.load( url, function ( text ) {
 
 			onLoad( scope.parse( JSON.parse( text ) ) );
 
-		}, onProgress, onError );
+		} );
 
 	},
 
@@ -37,17 +37,19 @@ THREE.BufferGeometryLoader.prototype = {
 		var geometry = new THREE.BufferGeometry();
 
 		var attributes = json.attributes;
+		var offsets = json.offsets;
+		var boundingSphere = json.boundingSphere;
 
 		for ( var key in attributes ) {
 
 			var attribute = attributes[ key ];
-			var typedArray = new self[ attribute.type ]( attribute.array );
 
-			geometry.addAttribute( key, new THREE.BufferAttribute( typedArray, attribute.itemSize ) );
+			geometry.attributes[ key ] = {
+				itemSize: attribute.itemSize,
+				array: new self[ attribute.type ]( attribute.array )
+			}
 
 		}
-
-		var offsets = json.offsets;
 
 		if ( offsets !== undefined ) {
 
@@ -55,19 +57,12 @@ THREE.BufferGeometryLoader.prototype = {
 
 		}
 
-		var boundingSphere = json.boundingSphere;
-
 		if ( boundingSphere !== undefined ) {
 
-			var center = new THREE.Vector3();
-
-			if ( boundingSphere.center !== undefined ) {
-
-				center.fromArray( boundingSphere.center );
-
-			}
-
-			geometry.boundingSphere = new THREE.Sphere( center, boundingSphere.radius );
+			geometry.boundingSphere = new THREE.Sphere(
+				new THREE.Vector3().fromArray( boundingSphere.center !== undefined ? boundingSphere.center : [ 0, 0, 0 ] ),
+				boundingSphere.radius
+			);
 
 		}
 

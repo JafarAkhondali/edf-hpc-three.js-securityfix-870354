@@ -25,8 +25,6 @@ THREE.LineDashedMaterial = function ( parameters ) {
 
 	THREE.Material.call( this );
 
-	this.type = 'LineDashedMaterial';
-
 	this.color = new THREE.Color( 0xffffff );
 
 	this.linewidth = 1;
@@ -44,7 +42,6 @@ THREE.LineDashedMaterial = function ( parameters ) {
 };
 
 THREE.LineDashedMaterial.prototype = Object.create( THREE.Material.prototype );
-THREE.LineDashedMaterial.prototype.constructor = THREE.LineDashedMaterial;
 
 THREE.LineDashedMaterial.prototype.clone = function () {
 

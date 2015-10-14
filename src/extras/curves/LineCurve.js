@@ -10,7 +10,6 @@ THREE.LineCurve = function ( v1, v2 ) {
 };
 
 THREE.LineCurve.prototype = Object.create( THREE.Curve.prototype );
-THREE.LineCurve.prototype.constructor = THREE.LineCurve;
 
 THREE.LineCurve.prototype.getPoint = function ( t ) {
 

@@ -94,7 +94,7 @@ THREE.AWDLoader = (function (){
     this.materialFactory = undefined;
 
     this._resourceLoader = null;
-    this._url = '';
+    this._url = null;
 
     this._data;
     this._ptr = 0;
@@ -116,7 +116,8 @@ THREE.AWDLoader = (function (){
   };
 
 
-  AWDLoader.prototype = Object.create( THREE.Loader.prototype );
+  AWDLoader.prototype = new THREE.Loader();
+
   AWDLoader.prototype.constructor = AWDLoader;
 
   AWDLoader.prototype.load = function ( url, callback ) {
@@ -169,8 +170,6 @@ THREE.AWDLoader = (function (){
     while ( this._ptr < blen ) {
       this.parseNextBlock();
     }
-
-    return this.trunk;
 
   }
 
@@ -736,8 +735,8 @@ THREE.AWDLoader = (function (){
         // ------------------
         if ( str_type === 1 ) {
 
-          buffer = new Float32Array( ( str_len / 12 ) * 3 );
-          attrib = new THREE.BufferAttribute( buffer, 3 );
+          attrib = new THREE.Float32Attribute( str_len/12, 3 );
+          buffer = attrib.array;
 
           geom.addAttribute( 'position', attrib );
           idx = 0;
@@ -755,8 +754,7 @@ THREE.AWDLoader = (function (){
         // -----------------
         else if (str_type === 2) {
 
-          buffer = new Uint16Array( str_len / 2 );
-          attrib = new THREE.BufferAttribute( buffer, 1 );
+          attrib = new THREE.Uint16Attribute( str_len/2, 1 );
           geom.addAttribute( 'index', attrib );
 
           geom.offsets.push({
@@ -765,6 +763,7 @@ THREE.AWDLoader = (function (){
             count: str_len/2
           });
 
+          buffer = attrib.array;
           idx = 0;
 
           while (this._ptr < str_end) {
@@ -779,8 +778,8 @@ THREE.AWDLoader = (function (){
         // -------------------
         else if (str_type === 3) {
 
-          buffer = new Float32Array( ( str_len / 8 ) * 2 );
-          attrib = new THREE.BufferAttribute( buffer, 2 );
+          attrib = new THREE.Float32Attribute( str_len/8, 2 );
+          buffer = attrib.array;
 
           geom.addAttribute( 'uv', attrib );
           idx = 0;
@@ -795,10 +794,10 @@ THREE.AWDLoader = (function (){
         // NORMALS
         else if (str_type === 4) {
 
-          buffer = new Float32Array( ( str_len / 12 ) * 3 );
-          attrib = new THREE.BufferAttribute( buffer, 3 );
+          attrib = new THREE.Float32Attribute( str_len/12, 3 );
           geom.addAttribute( 'normal', attrib );
-          idx = 0;
+          buffer = attrib.array
+          idx = 0
 
           while (this._ptr < str_end) {
             buffer[idx]   = -this.readF32();

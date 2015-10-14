@@ -28,13 +28,6 @@ References:
 
 var CTM = CTM || {};
 
-// browserify support
-if ( typeof module === 'object' ) {
-
-	module.exports = CTM;
-
-}
-
 CTM.CompressionMethod = {
   RAW: 0x00574152,
   MG1: 0x0031474d,
