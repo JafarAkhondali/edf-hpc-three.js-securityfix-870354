@@ -219,4 +219,3 @@ THREE.ConvexGeometry = function( vertices ) {
 };
 
 THREE.ConvexGeometry.prototype = Object.create( THREE.Geometry.prototype );
-THREE.ConvexGeometry.prototype.constructor = THREE.ConvexGeometry;

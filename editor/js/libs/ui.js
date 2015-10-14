@@ -1,14 +1,6 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
 var UI = {};
 
-UI.Element = function ( dom ) {
-
-	this.dom = dom;
-
-};
+UI.Element = function () {};
 
 UI.Element.prototype = {
 
@@ -60,7 +52,7 @@ UI.Element.prototype = {
 
 var properties = [ 'position', 'left', 'top', 'right', 'bottom', 'width', 'height', 'border', 'borderLeft',
 'borderTop', 'borderRight', 'borderBottom', 'borderColor', 'display', 'overflow', 'margin', 'marginLeft', 'marginTop', 'marginRight', 'marginBottom', 'padding', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'color',
-'backgroundColor', 'opacity', 'fontSize', 'fontWeight', 'textAlign', 'textDecoration', 'textTransform', 'cursor', 'zIndex' ];
+'backgroundColor', 'opacity', 'fontSize', 'fontWeight', 'textTransform', 'cursor' ];
 
 properties.forEach( function ( property ) {
 
@@ -77,7 +69,7 @@ properties.forEach( function ( property ) {
 
 // events
 
-var events = [ 'KeyUp', 'KeyDown', 'MouseOver', 'MouseOut', 'Click', 'DblClick', 'Change' ];
+var events = [ 'KeyUp', 'KeyDown', 'MouseOver', 'MouseOut', 'Click', 'Change' ];
 
 events.forEach( function ( event ) {
 
@@ -109,23 +101,12 @@ UI.Panel = function () {
 };
 
 UI.Panel.prototype = Object.create( UI.Element.prototype );
-UI.Panel.prototype.constructor = UI.Panel;
 
 UI.Panel.prototype.add = function () {
 
 	for ( var i = 0; i < arguments.length; i ++ ) {
 
-		var argument = arguments[ i ];
-
-		if ( argument instanceof UI.Element ) {
-
-			this.dom.appendChild( argument.dom );
-
-		} else {
-
-			console.error( 'UI.Panel:', argument, 'is not an instance of UI.Element.' )
-
-		}
+		this.dom.appendChild( arguments[ i ].dom );
 
 	}
 
@@ -137,18 +118,8 @@ UI.Panel.prototype.add = function () {
 UI.Panel.prototype.remove = function () {
 
 	for ( var i = 0; i < arguments.length; i ++ ) {
-	
-		var argument = arguments[ i ];
 
-		if ( argument instanceof UI.Element ) {
-
-			this.dom.removeChild( argument.dom );
-
-		} else {
-
-			console.error( 'UI.Panel:', argument, 'is not an instance of UI.Element.' )
-
-		}
+		this.dom.removeChild( arguments[ i ].dom );
 
 	}
 
@@ -173,24 +144,22 @@ UI.CollapsiblePanel = function () {
 
 	UI.Panel.call( this );
 
-	this.setClass( 'Panel Collapsible' );
+	this.dom.className = 'Panel CollapsiblePanel';
+
+	this.button = document.createElement( 'div' );
+	this.button.className = 'CollapsiblePanelButton';
+	this.dom.appendChild( this.button );
 
 	var scope = this;
+	this.button.addEventListener( 'click', function ( event ) {
 
-	this.static = new UI.Panel();
-	this.static.setClass( 'Static' );
-	this.static.onClick( function () {
 		scope.toggle();
-	} );
-	this.dom.appendChild( this.static.dom );
 
-	this.contents = new UI.Panel();
-	this.contents.setClass( 'Content' );
-	this.dom.appendChild( this.contents.dom );
+	}, false );
 
-	var button = new UI.Panel();
-	button.setClass( 'Button' );
-	this.static.add( button );
+	this.content = document.createElement( 'div' );
+	this.content.className = 'CollapsibleContent';
+	this.dom.appendChild( this.content );
 
 	this.isCollapsed = false;
 
@@ -199,47 +168,66 @@ UI.CollapsiblePanel = function () {
 };
 
 UI.CollapsiblePanel.prototype = Object.create( UI.Panel.prototype );
-UI.CollapsiblePanel.prototype.constructor = UI.CollapsiblePanel;
 
 UI.CollapsiblePanel.prototype.addStatic = function () {
 
-	this.static.add.apply( this.static, arguments );
+	for ( var i = 0; i < arguments.length; i ++ ) {
+
+		this.dom.insertBefore( arguments[ i ].dom, this.content );
+
+	}
+
 	return this;
 
 };
 
-UI.CollapsiblePanel.prototype.removeStatic = function () {
-
-	this.static.remove.apply( this.static, arguments );
-	return this;
-
-};
+UI.CollapsiblePanel.prototype.removeStatic = UI.Panel.prototype.remove;
 
 UI.CollapsiblePanel.prototype.clearStatic = function () {
 
-	this.static.clear();
-	return this;
+	this.dom.childNodes.forEach( function ( child ) {
+
+		if ( child !== this.content ) {
+
+			this.dom.removeChild( child );
+
+		}
+
+	});
 
 };
 
 UI.CollapsiblePanel.prototype.add = function () {
 
-	this.contents.add.apply( this.contents, arguments );
+	for ( var i = 0; i < arguments.length; i ++ ) {
+
+		this.content.appendChild( arguments[ i ].dom );
+
+	}
+
 	return this;
 
 };
 
 UI.CollapsiblePanel.prototype.remove = function () {
 
-	this.contents.remove.apply( this.contents, arguments );
+	for ( var i = 0; i < arguments.length; i ++ ) {
+
+		this.content.removeChild( arguments[ i ].dom );
+
+	}
+
 	return this;
 
 };
 
 UI.CollapsiblePanel.prototype.clear = function () {
 
-	this.contents.clear();
-	return this;
+	while ( this.content.children.length ) {
+
+		this.content.removeChild( this.content.lastChild );
+
+	}
 
 };
 
@@ -261,31 +249,19 @@ UI.CollapsiblePanel.prototype.expand = function() {
 
 };
 
-UI.CollapsiblePanel.prototype.setCollapsed = function( boolean ) {
+UI.CollapsiblePanel.prototype.setCollapsed = function( setCollapsed ) {
 
-	if ( boolean ) {
+	if ( setCollapsed ) {
 
-		this.dom.classList.add( 'collapsed' );
+		this.dom.classList.add('collapsed');
 
 	} else {
 
-		this.dom.classList.remove( 'collapsed' );
+		this.dom.classList.remove('collapsed');
 
 	}
 
-	this.isCollapsed = boolean;
-
-	if ( this.onCollapsedChangeCallback !== undefined ) {
-
-		this.onCollapsedChangeCallback( boolean );
-
-	}
-
-};
-
-UI.CollapsiblePanel.prototype.onCollapsedChange = function ( callback ) {
-
-	this.onCollapsedChangeCallback = callback;
+	this.isCollapsed = setCollapsed;
 
 };
 
@@ -309,13 +285,6 @@ UI.Text = function ( text ) {
 };
 
 UI.Text.prototype = Object.create( UI.Element.prototype );
-UI.Text.prototype.constructor = UI.Text;
-
-UI.Text.prototype.getValue = function () {
-
-	return this.dom.textContent;
-
-};
 
 UI.Text.prototype.setValue = function ( value ) {
 
@@ -332,7 +301,7 @@ UI.Text.prototype.setValue = function ( value ) {
 
 // Input
 
-UI.Input = function ( text ) {
+UI.Input = function () {
 
 	UI.Element.call( this );
 
@@ -350,14 +319,12 @@ UI.Input = function ( text ) {
 	}, false );
 
 	this.dom = dom;
-	this.setValue( text );
 
 	return this;
 
 };
 
 UI.Input.prototype = Object.create( UI.Element.prototype );
-UI.Input.prototype.constructor = UI.Input;
 
 UI.Input.prototype.getValue = function () {
 
@@ -386,23 +353,10 @@ UI.TextArea = function () {
 	dom.className = 'TextArea';
 	dom.style.padding = '2px';
 	dom.style.border = '1px solid #ccc';
-	dom.spellcheck = false;
 
 	dom.addEventListener( 'keydown', function ( event ) {
 
 		event.stopPropagation();
-
-		if ( event.keyCode === 9 ) {
-
-			event.preventDefault();
-
-			var cursor = dom.selectionStart;
-
-			dom.value = dom.value.substring( 0, cursor ) + '\t' + dom.value.substring( cursor );
-			dom.selectionStart = cursor + 1;
-			dom.selectionEnd = dom.selectionStart;
-
-		}
 
 	}, false );
 
@@ -413,7 +367,6 @@ UI.TextArea = function () {
 };
 
 UI.TextArea.prototype = Object.create( UI.Element.prototype );
-UI.TextArea.prototype.constructor = UI.TextArea;
 
 UI.TextArea.prototype.getValue = function () {
 
@@ -452,7 +405,6 @@ UI.Select = function () {
 };
 
 UI.Select.prototype = Object.create( UI.Element.prototype );
-UI.Select.prototype.constructor = UI.Select;
 
 UI.Select.prototype.setMultiple = function ( boolean ) {
 
@@ -495,13 +447,7 @@ UI.Select.prototype.getValue = function () {
 
 UI.Select.prototype.setValue = function ( value ) {
 
-	value = String( value );
-
-	if ( this.dom.value !== value ) {
-
-		this.dom.value = value;
-
-	}
+	this.dom.value = value;
 
 	return this;
 
@@ -569,7 +515,6 @@ UI.FancySelect = function () {
 };
 
 UI.FancySelect.prototype = Object.create( UI.Element.prototype );
-UI.FancySelect.prototype.constructor = UI.FancySelect;
 
 UI.FancySelect.prototype.setOptions = function ( options ) {
 
@@ -680,7 +625,6 @@ UI.Checkbox = function ( boolean ) {
 };
 
 UI.Checkbox.prototype = Object.create( UI.Element.prototype );
-UI.Checkbox.prototype.constructor = UI.Checkbox;
 
 UI.Checkbox.prototype.getValue = function () {
 
@@ -731,7 +675,6 @@ UI.Color = function () {
 };
 
 UI.Color.prototype = Object.create( UI.Element.prototype );
-UI.Color.prototype.constructor = UI.Color;
 
 UI.Color.prototype.getValue = function () {
 
@@ -755,7 +698,7 @@ UI.Color.prototype.setValue = function ( value ) {
 
 UI.Color.prototype.setHexValue = function ( hex ) {
 
-	this.dom.value = '#' + ( '000000' + hex.toString( 16 ) ).slice( -6 );
+	this.dom.value = "#" + ( '000000' + hex.toString( 16 ) ).slice( -6 );
 
 	return this;
 
@@ -849,19 +792,9 @@ UI.Number = function ( number ) {
 
 	var onChange = function ( event ) {
 
-		var value = 0;
+		var number = parseFloat( dom.value );
 
-		try {
-
-			value = eval( dom.value );
-
-		} catch ( error ) {
-
-			console.error( error.message );
-
-		}
-
-		dom.value = parseFloat( value );
+		dom.value = isNaN( number ) === false ? number : 0;
 
 	};
 
@@ -891,7 +824,6 @@ UI.Number = function ( number ) {
 };
 
 UI.Number.prototype = Object.create( UI.Element.prototype );
-UI.Number.prototype.constructor = UI.Number;
 
 UI.Number.prototype.getValue = function () {
 
@@ -1013,19 +945,13 @@ UI.Integer = function ( number ) {
 
 	var onChange = function ( event ) {
 
-		var value = 0;
+		var number = parseInt( dom.value );
 
-		try {
+		if ( isNaN( number ) === false ) {
 
-			value = eval( dom.value );
-
-		} catch ( error ) {
-
-			console.error( error.message );
+			dom.value = number;
 
 		}
-
-		dom.value = parseInt( value );
 
 	};
 
@@ -1055,7 +981,6 @@ UI.Integer = function ( number ) {
 };
 
 UI.Integer.prototype = Object.create( UI.Element.prototype );
-UI.Integer.prototype.constructor = UI.Integer;
 
 UI.Integer.prototype.getValue = function () {
 
@@ -1101,7 +1026,6 @@ UI.Break = function () {
 };
 
 UI.Break.prototype = Object.create( UI.Element.prototype );
-UI.Break.prototype.constructor = UI.Break;
 
 
 // HorizontalRule
@@ -1120,7 +1044,6 @@ UI.HorizontalRule = function () {
 };
 
 UI.HorizontalRule.prototype = Object.create( UI.Element.prototype );
-UI.HorizontalRule.prototype.constructor = UI.HorizontalRule;
 
 
 // Button
@@ -1142,58 +1065,10 @@ UI.Button = function ( value ) {
 };
 
 UI.Button.prototype = Object.create( UI.Element.prototype );
-UI.Button.prototype.constructor = UI.Button;
 
 UI.Button.prototype.setLabel = function ( value ) {
 
 	this.dom.textContent = value;
-
-	return this;
-
-};
-
-
-// Dialog
-
-UI.Dialog = function ( value ) {
-
-	var scope = this;
-	
-	var dom = document.createElement( 'dialog' );
-
-	if ( dom.showModal === undefined ) {
-
-		// fallback
-
-		dom = document.createElement( 'div' );
-		dom.style.display = 'none';
-
-		dom.showModal = function () {
-
-			dom.style.position = 'absolute';
-			dom.style.left = '100px';
-			dom.style.top = '100px';
-			dom.style.zIndex = 1;
-			dom.style.display = '';
-
-		};
-
-	}
-
-	dom.className = 'Dialog';
-
-	this.dom = dom;
-
-	return this;
-
-};
-
-UI.Dialog.prototype = Object.create( UI.Panel.prototype );
-UI.Dialog.prototype.constructor = UI.Dialog;
-
-UI.Dialog.prototype.showModal = function () {
-
-	this.dom.showModal();
 
 	return this;
 

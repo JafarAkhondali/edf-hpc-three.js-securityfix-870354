@@ -7,8 +7,6 @@ THREE.BoxGeometry = function ( width, height, depth, widthSegments, heightSegmen
 
 	THREE.Geometry.call( this );
 
-	this.type = 'BoxGeometry';
-
 	this.parameters = {
 		width: width,
 		height: height,
@@ -83,9 +81,9 @@ THREE.BoxGeometry = function ( width, height, depth, widthSegments, heightSegmen
 
 		}
 
-		for ( iy = 0; iy < gridY; iy ++ ) {
+		for ( iy = 0; iy < gridY; iy++ ) {
 
-			for ( ix = 0; ix < gridX; ix ++ ) {
+			for ( ix = 0; ix < gridX; ix++ ) {
 
 				var a = ix + gridX1 * iy;
 				var b = ix + gridX1 * ( iy + 1 );
@@ -124,4 +122,3 @@ THREE.BoxGeometry = function ( width, height, depth, widthSegments, heightSegmen
 };
 
 THREE.BoxGeometry.prototype = Object.create( THREE.Geometry.prototype );
-THREE.BoxGeometry.prototype.constructor = THREE.BoxGeometry;

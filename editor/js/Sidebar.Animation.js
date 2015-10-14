@@ -1,7 +1,3 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
 Sidebar.Animation = function ( editor ) {
 
 	var signals = editor.signals;
@@ -9,82 +5,85 @@ Sidebar.Animation = function ( editor ) {
 	var options = {};
 	var possibleAnimations = {};
 
-	var container = new UI.CollapsiblePanel();
-	container.setCollapsed( editor.config.getKey( 'ui/sidebar/animation/collapsed' ) );
-	container.onCollapsedChange( function ( boolean ) {
-
-		editor.config.setKey( 'ui/sidebar/animation/collapsed', boolean );
-
-	} );
+	var container = new UI.Panel();
 	container.setDisplay( 'none' );
 
-	container.addStatic( new UI.Text( 'Animation' ).setTextTransform( 'uppercase' ) );
+	container.add( new UI.Text( 'Animation' ) );
+	container.add( new UI.Break(), new UI.Break() );
+
+	var AnimationsRow = new UI.Panel();
+	var Animations = new UI.Select().setOptions( options ).setWidth( '130px' ).setColor( '#444' ).setFontSize( '12px' );
+	AnimationsRow.add( new UI.Text( 'animations' ).setWidth( '90px' ) );
+	AnimationsRow.add( Animations );
+	container.add( AnimationsRow );
 	container.add( new UI.Break() );
 
-	var animationsRow = new UI.Panel();
-	container.add( animationsRow );
+	var PlayRow = new UI.Panel();
+	var playButton = new UI.Button().setLabel("Play").onClick(play);
+	PlayRow.add( playButton );
+	container.add( PlayRow );
+	container.add( new UI.Break() );
 
-	var animations = {};
+	function play() {
 
-	signals.objectAdded.add( function ( object ) {
+		var value = Animations.getValue();
 
-		object.traverse( function ( child ) {
+		if ( possibleAnimations[ value ] ) {
 
-			if ( child instanceof THREE.SkinnedMesh ) {
+			var anims = possibleAnimations[value]
 
-				var material = child.material;
+			for ( var i = 0; i < anims.length; i ++ ) {
 
-				if ( material instanceof THREE.MeshFaceMaterial ) {
-
-					for ( var i = 0; i < material.materials.length; i ++ ) {
-
-						material.materials[ i ].skinning = true;
-
-					}
-
-				} else {
-
-					child.material.skinning = true;
-
-				}
-
-				animations[ child.id ] = new THREE.Animation( child, child.geometry.animation );
+				anims[ i ].play();
 
 			}
 
-		} );
+			signals.playAnimations.dispatch( anims );
+
+		};
+
+	}
+
+	signals.objectAdded.add( function ( object ) {
+
+		if ( object instanceof THREE.Mesh ) {
+
+			if ( object.geometry && object.geometry.animation ) {
+
+				var name = object.geometry.animation.name;
+				options[name] = name
+
+				Animations.setOptions( options );
+
+				THREE.AnimationHandler.add( object.geometry.animation );
+
+				var animation = new THREE.Animation( object, name, THREE.AnimationHandler.CATMULLROM );
+
+				if ( possibleAnimations[ name ] ){
+
+					possibleAnimations[ name ].push( animation );
+
+				} else {
+
+					possibleAnimations[ name ] = [ animation ];
+
+				}
+
+			}
+
+		}
 
 	} );
 
 	signals.objectSelected.add( function ( object ) {
 
-		container.setDisplay( 'none' );
-
-		if ( object instanceof THREE.SkinnedMesh ) {
-
-			animationsRow.clear();
-
-			var animation = animations[ object.id ];
-
-			var playButton = new UI.Button().setLabel( 'Play' ).onClick( function () {
-
-				animation.play();
-
-				signals.playAnimation.dispatch( animation );
-
-			} );
-			animationsRow.add( playButton );
-
-			var pauseButton = new UI.Button().setLabel( 'Stop' ).onClick( function () {
-
-				animation.stop();
-
-				signals.stopAnimation.dispatch( animation );
-
-			} );
-			animationsRow.add( pauseButton );
+		if ( object && object.geometry && object.geometry.animation ) {
 
 			container.setDisplay( 'block' );
+
+		} else {
+
+			container.setDisplay( 'none' );
 
 		}
 

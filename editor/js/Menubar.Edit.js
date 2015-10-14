@@ -1,27 +1,20 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
 Menubar.Edit = function ( editor ) {
 
-	var container = new UI.Panel();
-	container.setClass( 'menu' );
+	// event handlers
 
-	var title = new UI.Panel();
-	title.setClass( 'title' );
-	title.setTextContent( 'Edit' );
-	container.add( title );
+	// function onUndoOptionClick () {
 
-	var options = new UI.Panel();
-	options.setClass( 'options' );
-	container.add( options );
+	// 	console.log( 'UNDO not implemented yet' );
 
-	// Clone
+	// }
 
-	var option = new UI.Panel();
-	option.setClass( 'option' );
-	option.setTextContent( 'Clone' );
-	option.onClick( function () {
+	// function onRedoOptionClick () {
+
+	// 	console.log( 'REDO not implemented yet' );
+
+	// }
+
+	function onCloneOptionClick () {
 
 		var object = editor.selected;
 
@@ -32,37 +25,37 @@ Menubar.Edit = function ( editor ) {
 		editor.addObject( object );
 		editor.select( object );
 
-	} );
-	options.add( option );
+	}
 
-	// Delete
+	function onDeleteOptionClick () {
 
-	var option = new UI.Panel();
-	option.setClass( 'option' );
-	option.setTextContent( 'Delete' );
-	option.onClick( function () {
-	
-		var object = editor.selected;
-
-		if ( confirm( 'Delete ' + object.name + '?' ) === false ) return;
-
-		var parent = object.parent;
-		editor.removeObject( object );
+		var parent = editor.selected.parent;
+		editor.removeObject( editor.selected );
 		editor.select( parent );
 
-	} );
-	options.add( option );
+	}
 
-	//
+	function onConvertOptionClick () {
 
-	options.add( new UI.HorizontalRule() );
+		// convert to BufferGeometry
+		
+		var object = editor.selected;
+		if ( object.geometry instanceof THREE.Geometry ) {
 
-	// Flatten
+			if ( object.parent === undefined ) return; // avoid flattening the camera or scene
 
-	var option = new UI.Panel();
-	option.setClass( 'option' );
-	option.setTextContent( 'Flatten' );
-	option.onClick( function () {
+			if ( confirm( 'Convert ' + object.name + ' to BufferGeometry?' ) === false ) return;
+
+			delete object.__webglInit; // TODO: Remove hack (WebGLRenderer refactoring)
+
+			object.geometry = THREE.BufferGeometryUtils.fromGeometry( object.geometry );
+
+			editor.signals.objectChanged.dispatch( object );
+		}
+
+	}
+
+	function onFlattenOptionClick () {
 
 		var object = editor.selected;
 
@@ -70,11 +63,12 @@ Menubar.Edit = function ( editor ) {
 
 		if ( confirm( 'Flatten ' + object.name + '?' ) === false ) return;
 
-		var geometry = object.geometry;
+		delete object.__webglInit; // TODO: Remove hack (WebGLRenderer refactoring)
 
+		var geometry = object.geometry.clone();
 		geometry.applyMatrix( object.matrix );
-		geometry.verticesNeedUpdate = true;
-		geometry.normalsNeedUpdate = true;
+
+		object.geometry = geometry;
 
 		object.position.set( 0, 0, 0 );
 		object.rotation.set( 0, 0, 0 );
@@ -82,9 +76,27 @@ Menubar.Edit = function ( editor ) {
 
 		editor.signals.objectChanged.dispatch( object );
 
-	} );
-	options.add( option );
+	}
 
-	return container;
+	// configure menu contents
 
-};
+	var createOption = UI.MenubarHelper.createOption;
+	var createDivider = UI.MenubarHelper.createDivider;
+
+	var menuConfig = [
+		// createOption( 'Undo', onUndoOptionClick ),
+		// createOption( 'Redo', onRedoOptionClick ),
+		// createDivider(),
+
+		createOption( 'Clone', onCloneOptionClick ),
+		createOption( 'Delete', onDeleteOptionClick ),
+		createDivider(),
+
+		createOption( 'Convert', onConvertOptionClick ),
+		createOption( 'Flatten', onFlattenOptionClick )
+	];
+
+	var optionsPanel = UI.MenubarHelper.createOptionsPanel( menuConfig );
+
+	return UI.MenubarHelper.createMenuContainer( 'Edit', optionsPanel );
+}

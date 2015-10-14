@@ -17,4 +17,3 @@ THREE.Geometry2 = function ( size ) {
 };
 
 THREE.Geometry2.prototype = Object.create( THREE.BufferGeometry.prototype );
-THREE.Geometry2.prototype.constructor = THREE.Geometry2;

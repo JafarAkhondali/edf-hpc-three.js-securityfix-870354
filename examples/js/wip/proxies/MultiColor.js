@@ -8,7 +8,6 @@ THREE.MultiColor = function(links) {
 }
 
 THREE.MultiColor.prototype = Object.create( THREE.Color.prototype );
-THREE.MultiColor.prototype.constructor = THREE.MultiColor;
 
 THREE.MultiColor.prototype.setAll = function(axis, value) {
 

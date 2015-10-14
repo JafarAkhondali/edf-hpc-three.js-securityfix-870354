@@ -5,20 +5,15 @@
 
 THREE.Sprite = ( function () {
 
-	var indices = new Uint16Array( [ 0, 1, 2,  0, 2, 3 ] );
-	var vertices = new Float32Array( [ - 0.5, - 0.5, 0,   0.5, - 0.5, 0,   0.5, 0.5, 0,   - 0.5, 0.5, 0 ] );
-	var uvs = new Float32Array( [ 0, 0,   1, 0,   1, 1,   0, 1 ] );
+	var vertices = new THREE.Float32Attribute( 3, 3 );
+	vertices.set( [ - 0.5, - 0.5, 0, 0.5, - 0.5, 0, 0.5, 0.5, 0 ] );
 
 	var geometry = new THREE.BufferGeometry();
-	geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) );
-	geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-	geometry.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+	geometry.addAttribute( 'position', vertices );
 
 	return function ( material ) {
 
 		THREE.Object3D.call( this );
-
-		this.type = 'Sprite';
 
 		this.geometry = geometry;
 		this.material = ( material !== undefined ) ? material : new THREE.SpriteMaterial();
@@ -28,36 +23,18 @@ THREE.Sprite = ( function () {
 } )();
 
 THREE.Sprite.prototype = Object.create( THREE.Object3D.prototype );
-THREE.Sprite.prototype.constructor = THREE.Sprite;
 
-THREE.Sprite.prototype.raycast = ( function () {
+/*
+ * Custom update matrix
+ */
 
-	var matrixPosition = new THREE.Vector3();
+THREE.Sprite.prototype.updateMatrix = function () {
 
-	return function ( raycaster, intersects ) {
+	this.matrix.compose( this.position, this.quaternion, this.scale );
 
-		matrixPosition.setFromMatrixPosition( this.matrixWorld );
+	this.matrixWorldNeedsUpdate = true;
 
-		var distance = raycaster.ray.distanceToPoint( matrixPosition );
-
-		if ( distance > this.scale.x ) {
-
-			return;
-
-		}
-
-		intersects.push( {
-
-			distance: distance,
-			point: this.position,
-			face: null,
-			object: this
-
-		} );
-
-	};
-
-}() );
+};
 
 THREE.Sprite.prototype.clone = function ( object ) {
 

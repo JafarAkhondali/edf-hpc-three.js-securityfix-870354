@@ -506,7 +506,7 @@ THREE.MD2CharacterComplex = function () {
 
 	function loadTextures( baseUrl, textureUrls ) {
 
-		var mapping = THREE.UVMapping;
+		var mapping = new THREE.UVMapping();
 		var textures = [];
 
 		for ( var i = 0; i < textureUrls.length; i ++ ) {

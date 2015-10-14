@@ -15,7 +15,6 @@ THREE.CTMLoader = function ( showStatus ) {
 };
 
 THREE.CTMLoader.prototype = Object.create( THREE.Loader.prototype );
-THREE.CTMLoader.prototype.constructor = THREE.CTMLoader;
 
 // Load multiple CTM parts defined in JSON
 
@@ -110,7 +109,7 @@ THREE.CTMLoader.prototype.load = function( url, callback, parameters ) {
 
 				if ( parameters.useWorker ) {
 
-					var worker = parameters.worker || new Worker( "js/loaders/ctm/CTMWorker.js" );
+					var worker = new Worker( "js/loaders/ctm/CTMWorker.js" );
 
 					worker.onmessage = function( event ) {
 
@@ -191,66 +190,49 @@ THREE.CTMLoader.prototype.load = function( url, callback, parameters ) {
 
 THREE.CTMLoader.prototype.createModel = function ( file, callback ) {
 
-	var Model = function () {
+	var Model = function ( ) {
 
 		THREE.BufferGeometry.call( this );
 
 		this.materials = [];
 
-		var indices = file.body.indices,
-		positions = file.body.vertices,
-		normals = file.body.normals;
+		// init GL buffers
+		var vertexIndexArray = file.body.indices,
+		vertexPositionArray = file.body.vertices,
+		vertexNormalArray = file.body.normals;
 
-		var uvs, colors;
+		var vertexUvArray, vertexColorArray;
 
-		var uvMaps = file.body.uvMaps;
-
-		if ( uvMaps !== undefined && uvMaps.length > 0 ) {
-
-			uvs = uvMaps[ 0 ].uv;
-
+		if ( file.body.uvMaps !== undefined && file.body.uvMaps.length > 0 ) {
+			vertexUvArray = file.body.uvMaps[ 0 ].uv;
 		}
 
-		var attrMaps = file.body.attrMaps;
-
-		if ( attrMaps !== undefined && attrMaps.length > 0 && attrMaps[ 0 ].name === 'Color' ) {
-
-			colors = attrMaps[ 0 ].attr;
-
+		if ( file.body.attrMaps !== undefined && file.body.attrMaps.length > 0 && file.body.attrMaps[ 0 ].name === "Color" ) {
+			vertexColorArray = file.body.attrMaps[ 0 ].attr;
 		}
 
-		this.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) );
-		this.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+		this.addAttribute( 'index', vertexIndexArray, 1 );
+		this.addAttribute( 'position', vertexPositionArray, 3 );
 
-		if ( normals !== undefined ) {
+		if ( vertexNormalArray !== undefined ) 
+			this.addAttribute( 'normal', vertexNormalArray, 3 );
 
-			this.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
+		if ( vertexUvArray !== undefined ) 
+			this.addAttribute( 'uv', vertexUvArray, 2 );
 
-		}
-
-		if ( uvs !== undefined ) {
-
-			this.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
-
-		}
-
-		if ( colors !== undefined ) {
-
-			this.addAttribute( 'color', new THREE.BufferAttribute( colors, 4 ) );
-
-		}
+		if ( vertexColorArray !== undefined ) 
+			this.addAttribute( 'color', vertexColorArray, 4 );
 
 	}
 
 	Model.prototype = Object.create( THREE.BufferGeometry.prototype );
-	Model.prototype.constructor = Model;
 
 	var geometry = new Model();
 
 	geometry.computeOffsets();
 
 	// compute vertex normals if not present in the CTM model
-	if ( geometry.attributes.normal === undefined ) {
+	if ( geometry.attributes[ "normal" ] === undefined ) {
 		geometry.computeVertexNormals();
 	}
 

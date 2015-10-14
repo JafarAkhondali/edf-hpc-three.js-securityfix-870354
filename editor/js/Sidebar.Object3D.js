@@ -1,18 +1,8 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
 Sidebar.Object3D = function ( editor ) {
 
 	var signals = editor.signals;
 
 	var container = new UI.CollapsiblePanel();
-	container.setCollapsed( editor.config.getKey( 'ui/sidebar/object3d/collapsed' ) );
-	container.onCollapsedChange( function ( boolean ) {
-
-		editor.config.setKey( 'ui/sidebar/object3d/collapsed', boolean );
-
-	} );
 	container.setDisplay( 'none' );
 
 	var objectType = new UI.Text().setTextTransform( 'uppercase' );
@@ -40,7 +30,7 @@ Sidebar.Object3D = function ( editor ) {
 	// name
 
 	var objectNameRow = new UI.Panel();
-	var objectName = new UI.Input().setWidth( '150px' ).setFontSize( '12px' ).onChange( function () {
+	var objectName = new UI.Input().setWidth( '150px' ).setColor( '#444' ).setFontSize( '12px' ).onChange( function () {
 
 			editor.setObjectName( editor.selected, objectName.getValue() );
 
@@ -54,7 +44,7 @@ Sidebar.Object3D = function ( editor ) {
 	// parent
 
 	var objectParentRow = new UI.Panel();
-	var objectParent = new UI.Select().setWidth( '150px' ).setFontSize( '12px' ).onChange( update );
+	var objectParent = new UI.Select().setWidth( '150px' ).setColor( '#444' ).setFontSize( '12px' ).onChange( update );
 
 	objectParentRow.add( new UI.Text( 'Parent' ).setWidth( '90px' ) );
 	objectParentRow.add( objectParent );
@@ -89,9 +79,9 @@ Sidebar.Object3D = function ( editor ) {
 
 	var objectScaleRow = new UI.Panel();
 	var objectScaleLock = new UI.Checkbox().setPosition( 'absolute' ).setLeft( '75px' );
-	var objectScaleX = new UI.Number( 1 ).setRange( 0.01, Infinity ).setWidth( '50px' ).onChange( updateScaleX );
-	var objectScaleY = new UI.Number( 1 ).setRange( 0.01, Infinity ).setWidth( '50px' ).onChange( updateScaleY );
-	var objectScaleZ = new UI.Number( 1 ).setRange( 0.01, Infinity ).setWidth( '50px' ).onChange( updateScaleZ );
+	var objectScaleX = new UI.Number( 1 ).setWidth( '50px' ).onChange( updateScaleX );
+	var objectScaleY = new UI.Number( 1 ).setWidth( '50px' ).onChange( updateScaleY );
+	var objectScaleZ = new UI.Number( 1 ).setWidth( '50px' ).onChange( updateScaleZ );
 
 	objectScaleRow.add( new UI.Text( 'Scale' ).setWidth( '90px' ) );
 	objectScaleRow.add( objectScaleLock );
@@ -201,8 +191,6 @@ Sidebar.Object3D = function ( editor ) {
 
 	// user data
 
-	var timeout;
-
 	var objectUserDataRow = new UI.Panel();
 	var objectUserData = new UI.TextArea().setWidth( '150px' ).setHeight( '40px' ).setColor( '#444' ).setFontSize( '12px' ).onChange( update );
 	objectUserData.onKeyUp( function () {
@@ -210,14 +198,13 @@ Sidebar.Object3D = function ( editor ) {
 		try {
 
 			JSON.parse( objectUserData.getValue() );
-
-			objectUserData.dom.classList.add( 'success' );
-			objectUserData.dom.classList.remove( 'fail' );
+			objectUserData.setBorderColor( '#ccc' );
+			objectUserData.setBackgroundColor( '' );
 
 		} catch ( error ) {
 
-			objectUserData.dom.classList.remove( 'success' );
-			objectUserData.dom.classList.add( 'fail' );
+			objectUserData.setBorderColor( '#f00' );
+			objectUserData.setBackgroundColor( 'rgba(255,0,0,0.25)' );
 
 		}
 
@@ -385,7 +372,9 @@ Sidebar.Object3D = function ( editor ) {
 
 	}
 
-	function updateRows( object ) {
+	function updateRows() {
+
+		var object = editor.selected;
 
 		var properties = {
 			'parent': objectParentRow,
@@ -408,7 +397,9 @@ Sidebar.Object3D = function ( editor ) {
 
 	}
 
-	function updateTransformRows( object ) {
+	function updateTransformRows() {
+
+		var object = editor.selected;
 
 		if ( object instanceof THREE.Light ||
 		   ( object instanceof THREE.Object3D && object.userData.targetInverse ) ) {
@@ -429,31 +420,31 @@ Sidebar.Object3D = function ( editor ) {
 
 	signals.objectSelected.add( function ( object ) {
 
-		if ( object !== null ) {
-
-			container.setDisplay( 'block' );
-
-			updateRows( object );
-			updateUI( object );
-
-		} else {
-
-			container.setDisplay( 'none' );
-
-		}
+		updateUI();
 
 	} );
 
 	signals.sceneGraphChanged.add( function () {
 
 		var scene = editor.scene;
+
 		var options = {};
 
-		scene.traverse( function ( object ) {
+		options[ scene.id ] = 'Scene';
 
-			options[ object.id ] = object.name;
+		( function addObjects( objects ) {
 
-		} );
+			for ( var i = 0, l = objects.length; i < l; i ++ ) {
+
+				var object = objects[ i ];
+
+				options[ object.id ] = object.name;
+
+				addObjects( object.children );
+
+			}
+
+		} )( scene.children );
 
 		objectParent.setOptions( options );
 
@@ -463,105 +454,116 @@ Sidebar.Object3D = function ( editor ) {
 
 		if ( object !== editor.selected ) return;
 
-		updateUI( object );
+		updateUI();
 
 	} );
 
-	function updateUI( object ) {
+	function updateUI() {
 
-		objectType.setValue( object.type );
+		container.setDisplay( 'none' );
 
-		objectUUID.setValue( object.uuid );
-		objectName.setValue( object.name );
+		var object = editor.selected;
 
-		if ( object.parent !== undefined ) {
+		if ( object !== null ) {
 
-			objectParent.setValue( object.parent.id );
+			container.setDisplay( 'block' );
+
+			objectType.setValue( editor.getObjectType( object ) );
+
+			objectUUID.setValue( object.uuid );
+			objectName.setValue( object.name );
+
+			if ( object.parent !== undefined ) {
+
+				objectParent.setValue( object.parent.id );
+
+			}
+
+			objectPositionX.setValue( object.position.x );
+			objectPositionY.setValue( object.position.y );
+			objectPositionZ.setValue( object.position.z );
+
+			objectRotationX.setValue( object.rotation.x );
+			objectRotationY.setValue( object.rotation.y );
+			objectRotationZ.setValue( object.rotation.z );
+
+			objectScaleX.setValue( object.scale.x );
+			objectScaleY.setValue( object.scale.y );
+			objectScaleZ.setValue( object.scale.z );
+
+			if ( object.fov !== undefined ) {
+
+				objectFov.setValue( object.fov );
+
+			}
+
+			if ( object.near !== undefined ) {
+
+				objectNear.setValue( object.near );
+
+			}
+
+			if ( object.far !== undefined ) {
+
+				objectFar.setValue( object.far );
+
+			}
+
+			if ( object.intensity !== undefined ) {
+
+				objectIntensity.setValue( object.intensity );
+
+			}
+
+			if ( object.color !== undefined ) {
+
+				objectColor.setHexValue( object.color.getHexString() );
+
+			}
+
+			if ( object.groundColor !== undefined ) {
+
+				objectGroundColor.setHexValue( object.groundColor.getHexString() );
+
+			}
+
+			if ( object.distance !== undefined ) {
+
+				objectDistance.setValue( object.distance );
+
+			}
+
+			if ( object.angle !== undefined ) {
+
+				objectAngle.setValue( object.angle );
+
+			}
+
+			if ( object.exponent !== undefined ) {
+
+				objectExponent.setValue( object.exponent );
+
+			}
+
+			objectVisible.setValue( object.visible );
+
+			try {
+
+				objectUserData.setValue( JSON.stringify( object.userData, null, '  ' ) );
+
+			} catch ( error ) {
+
+				console.log( error );
+
+			}
+
+			objectUserData.setBorderColor( '#ccc' );
+			objectUserData.setBackgroundColor( '' );
+
+			updateRows();
+			updateTransformRows();
 
 		}
-
-		objectPositionX.setValue( object.position.x );
-		objectPositionY.setValue( object.position.y );
-		objectPositionZ.setValue( object.position.z );
-
-		objectRotationX.setValue( object.rotation.x );
-		objectRotationY.setValue( object.rotation.y );
-		objectRotationZ.setValue( object.rotation.z );
-
-		objectScaleX.setValue( object.scale.x );
-		objectScaleY.setValue( object.scale.y );
-		objectScaleZ.setValue( object.scale.z );
-
-		if ( object.fov !== undefined ) {
-
-			objectFov.setValue( object.fov );
-
-		}
-
-		if ( object.near !== undefined ) {
-
-			objectNear.setValue( object.near );
-
-		}
-
-		if ( object.far !== undefined ) {
-
-			objectFar.setValue( object.far );
-
-		}
-
-		if ( object.intensity !== undefined ) {
-
-			objectIntensity.setValue( object.intensity );
-
-		}
-
-		if ( object.color !== undefined ) {
-
-			objectColor.setHexValue( object.color.getHexString() );
-
-		}
-
-		if ( object.groundColor !== undefined ) {
-
-			objectGroundColor.setHexValue( object.groundColor.getHexString() );
-
-		}
-
-		if ( object.distance !== undefined ) {
-
-			objectDistance.setValue( object.distance );
-
-		}
-
-		if ( object.angle !== undefined ) {
-
-			objectAngle.setValue( object.angle );
-
-		}
-
-		if ( object.exponent !== undefined ) {
-
-			objectExponent.setValue( object.exponent );
-
-		}
-
-		objectVisible.setValue( object.visible );
-
-		try {
-
-			objectUserData.setValue( JSON.stringify( object.userData, null, '  ' ) );
-
-		} catch ( error ) {
-
-			console.log( error );
-
-		}
-
-		objectUserData.setBorderColor( '#ccc' );
-		objectUserData.setBackgroundColor( '' );
-
-		updateTransformRows( object );
 
 	}
 

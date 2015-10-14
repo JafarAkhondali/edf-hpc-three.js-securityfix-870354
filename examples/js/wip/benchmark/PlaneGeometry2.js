@@ -73,4 +73,3 @@ THREE.PlaneGeometry2 = function ( width, height, widthSegments, heightSegments )
 };
 
 THREE.PlaneGeometry2.prototype = Object.create( THREE.Geometry2.prototype );
-THREE.PlaneGeometry2.prototype.constructor = THREE.PlaneGeometry2;
