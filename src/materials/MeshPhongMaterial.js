@@ -22,8 +22,6 @@
  *
  *  specularMap: new THREE.Texture( <Image> ),
  *
- *  alphaMap: new THREE.Texture( <Image> ),
- *
  *  envMap: new THREE.TextureCube( [posx, negx, posy, negy, posz, negz] ),
  *  combine: THREE.Multiply,
  *  reflectivity: <float>,
@@ -51,8 +49,6 @@ THREE.MeshPhongMaterial = function ( parameters ) {
 
 	THREE.Material.call( this );
 
-	this.type = 'MeshPhongMaterial';
-
 	this.color = new THREE.Color( 0xffffff ); // diffuse
 	this.ambient = new THREE.Color( 0xffffff );
 	this.emissive = new THREE.Color( 0x000000 );
@@ -75,8 +71,6 @@ THREE.MeshPhongMaterial = function ( parameters ) {
 	this.normalScale = new THREE.Vector2( 1, 1 );
 
 	this.specularMap = null;
-
-	this.alphaMap = null;
 
 	this.envMap = null;
 	this.combine = THREE.MultiplyOperation;
@@ -103,7 +97,6 @@ THREE.MeshPhongMaterial = function ( parameters ) {
 };
 
 THREE.MeshPhongMaterial.prototype = Object.create( THREE.Material.prototype );
-THREE.MeshPhongMaterial.prototype.constructor = THREE.MeshPhongMaterial;
 
 THREE.MeshPhongMaterial.prototype.clone = function () {
 
@@ -133,8 +126,6 @@ THREE.MeshPhongMaterial.prototype.clone = function () {
 	material.normalScale.copy( this.normalScale );
 
 	material.specularMap = this.specularMap;
-
-	material.alphaMap = this.alphaMap;
 
 	material.envMap = this.envMap;
 	material.combine = this.combine;

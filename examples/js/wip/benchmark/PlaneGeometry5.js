@@ -63,4 +63,3 @@ THREE.PlaneGeometry5 = function ( width, height, widthSegments, heightSegments )
 };
 
 THREE.PlaneGeometry5.prototype = Object.create( THREE.Geometry5.prototype );
-THREE.PlaneGeometry5.prototype.constructor = THREE.PlaneGeometry5;

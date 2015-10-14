@@ -40,7 +40,6 @@
 	};
 
 	GizmoMaterial.prototype = Object.create( THREE.MeshBasicMaterial.prototype );
-	GizmoMaterial.prototype.constructor = GizmoMaterial;
 
 	var GizmoLineMaterial = function ( parameters ) {
 
@@ -75,7 +74,6 @@
 	};
 
 	GizmoLineMaterial.prototype = Object.create( THREE.LineBasicMaterial.prototype );
-	GizmoLineMaterial.prototype.constructor = GizmoLineMaterial;
 
 	THREE.TransformGizmo = function () {
 
@@ -127,7 +125,7 @@
 				for ( var name in gizmoMap ) {
 
 					for ( i = gizmoMap[name].length; i--;) {
-
+						
 						var object = gizmoMap[name][i][0];
 						var position = gizmoMap[name][i][1];
 						var rotation = gizmoMap[name][i][2];
@@ -136,7 +134,7 @@
 
 						if ( position ) object.position.set( position[0], position[1], position[2] );
 						if ( rotation ) object.rotation.set( rotation[0], rotation[1], rotation[2] );
-
+						
 						parent.add( object );
 
 					}
@@ -196,7 +194,6 @@
 	};
 
 	THREE.TransformGizmo.prototype = Object.create( THREE.Object3D.prototype );
-	THREE.TransformGizmo.prototype.constructor = THREE.TransformGizmo;
 
 	THREE.TransformGizmo.prototype.update = function ( rotation, eye ) {
 
@@ -224,7 +221,7 @@
 		mesh.updateMatrix();
 
 		arrowGeometry.merge( mesh.geometry, mesh.matrix );
-
+		
 		var lineXGeometry = new THREE.Geometry();
 		lineXGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 1, 0, 0 ) );
 
@@ -323,7 +320,6 @@
 	};
 
 	THREE.TransformGizmoTranslate.prototype = Object.create( THREE.TransformGizmo.prototype );
-	THREE.TransformGizmoTranslate.prototype.constructor = THREE.TransformGizmoTranslate;
 
 	THREE.TransformGizmoRotate = function () {
 
@@ -450,7 +446,6 @@
 	};
 
 	THREE.TransformGizmoRotate.prototype = Object.create( THREE.TransformGizmo.prototype );
-	THREE.TransformGizmoRotate.prototype.constructor = THREE.TransformGizmoRotate;
 
 	THREE.TransformGizmoScale = function () {
 
@@ -537,7 +532,6 @@
 	};
 
 	THREE.TransformGizmoScale.prototype = Object.create( THREE.TransformGizmo.prototype );
-	THREE.TransformGizmoScale.prototype.constructor = THREE.TransformGizmoScale;
 
 	THREE.TransformControls = function ( camera, domElement ) {
 
@@ -568,17 +562,15 @@
 		this.axis = null;
 
 		var scope = this;
-
+		
 		var _dragging = false;
 		var _mode = "translate";
 		var _plane = "XY";
 
 		var changeEvent = { type: "change" };
-		var mouseDownEvent = { type: "mouseDown" };
-		var mouseUpEvent = { type: "mouseUp", mode: _mode };
-		var objectChangeEvent = { type: "objectChange" };
 
 		var ray = new THREE.Raycaster();
+		var projector = new THREE.Projector();
 		var pointerVector = new THREE.Vector3();
 
 		var point = new THREE.Vector3();
@@ -648,7 +640,7 @@
 		this.detach = function ( object ) {
 
 			scope.object = undefined;
-			this.axis = null;
+			this.axis = undefined;
 
 			this.gizmo["translate"].hide();
 			this.gizmo["rotate"].hide();
@@ -664,7 +656,7 @@
 
 			this.gizmo["translate"].hide();
 			this.gizmo["rotate"].hide();
-			this.gizmo["scale"].hide();
+			this.gizmo["scale"].hide();	
 			this.gizmo[_mode].show();
 
 			this.update();
@@ -683,7 +675,7 @@
 			scope.size = size;
 			this.update();
 			scope.dispatchEvent( changeEvent );
-
+			
 		};
 
 		this.setSpace = function ( space ) {
@@ -728,21 +720,19 @@
 
 			event.preventDefault();
 
-			var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
+			var pointer = event.touches ? event.touches[ 0 ] : event;
 
 			var intersect = intersectObjects( pointer, scope.gizmo[_mode].pickers.children );
 
-			var axis = null;
-
 			if ( intersect ) {
 
-				axis = intersect.object.name;
+				scope.axis = intersect.object.name;
+				scope.update();
+				scope.dispatchEvent( changeEvent );
 
-			}
+			} else if ( scope.axis !== null ) {
 
-			if ( scope.axis !== axis ) {
-
-				scope.axis = axis;
+				scope.axis = null;
 				scope.update();
 				scope.dispatchEvent( changeEvent );
 
@@ -757,15 +747,13 @@
 			event.preventDefault();
 			event.stopPropagation();
 
-			var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
+			var pointer = event.touches ? event.touches[ 0 ] : event;
 
 			if ( pointer.button === 0 || pointer.button === undefined ) {
 
 				var intersect = intersectObjects( pointer, scope.gizmo[_mode].pickers.children );
 
 				if ( intersect ) {
-
-					scope.dispatchEvent( mouseDownEvent );
 
 					scope.axis = intersect.object.name;
 
@@ -803,7 +791,7 @@
 			event.preventDefault();
 			event.stopPropagation();
 
-			var pointer = event.changedTouches? event.changedTouches[0] : event;
+			var pointer = event.touches? event.touches[0] : event;
 
 			var planeIntersect = intersectObjects( pointer, [scope.gizmo[_mode].activePlane] );
 
@@ -827,7 +815,7 @@
 					scope.object.position.copy( oldPosition );
 					scope.object.position.add( point );
 
-				}
+				} 
 
 				if ( scope.space == "world" || scope.axis.search("XYZ") != -1 ) {
 
@@ -841,13 +829,13 @@
 					scope.object.position.add( point );
 
 				}
-
+				
 				if ( scope.snap !== null ) {
-
+				
 					if ( scope.axis.search("X") != -1 ) scope.object.position.x = Math.round( scope.object.position.x / scope.snap ) * scope.snap;
 					if ( scope.axis.search("Y") != -1 ) scope.object.position.y = Math.round( scope.object.position.y / scope.snap ) * scope.snap;
 					if ( scope.axis.search("Z") != -1 ) scope.object.position.z = Math.round( scope.object.position.z / scope.snap ) * scope.snap;
-
+				
 				}
 
 			} else if ( _mode == "scale" ) {
@@ -961,16 +949,11 @@
 
 			scope.update();
 			scope.dispatchEvent( changeEvent );
-			scope.dispatchEvent( objectChangeEvent );
 
 		}
 
 		function onPointerUp( event ) {
 
-			if ( _dragging && ( scope.axis !== null ) ) {
-				mouseUpEvent.mode = _mode;
-				scope.dispatchEvent( mouseUpEvent )
-			}
 			_dragging = false;
 			onPointerHover( event );
 
@@ -979,12 +962,11 @@
 		function intersectObjects( pointer, objects ) {
 
 			var rect = domElement.getBoundingClientRect();
-			var x = ( pointer.clientX - rect.left ) / rect.width;
-			var y = ( pointer.clientY - rect.top ) / rect.height;
+			var x = (pointer.clientX - rect.left) / rect.width;
+			var y = (pointer.clientY - rect.top) / rect.height;
+			pointerVector.set( ( x ) * 2 - 1, - ( y ) * 2 + 1, 0.5 );
 
-			pointerVector.set( ( x * 2 ) - 1, - ( y * 2 ) + 1, 0.5 );
-			pointerVector.unproject( camera );
-
+			projector.unprojectVector( pointerVector, camera );
 			ray.set( camPosition, pointerVector.sub( camPosition ).normalize() );
 
 			var intersections = ray.intersectObjects( objects, true );
@@ -995,6 +977,5 @@
 	};
 
 	THREE.TransformControls.prototype = Object.create( THREE.Object3D.prototype );
-	THREE.TransformControls.prototype.constructor = THREE.TransformControls;
 
 }());

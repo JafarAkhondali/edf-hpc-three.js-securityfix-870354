@@ -7,9 +7,7 @@ THREE.AreaLight = function ( color, intensity ) {
 
 	THREE.Light.call( this, color );
 
-	this.type = 'AreaLight';
-
-	this.normal = new THREE.Vector3( 0, - 1, 0 );
+	this.normal = new THREE.Vector3( 0, -1, 0 );
 	this.right = new THREE.Vector3( 1, 0, 0 );
 
 	this.intensity = ( intensity !== undefined ) ? intensity : 1;
@@ -24,5 +22,4 @@ THREE.AreaLight = function ( color, intensity ) {
 };
 
 THREE.AreaLight.prototype = Object.create( THREE.Light.prototype );
-THREE.AreaLight.prototype.constructor = THREE.AreaLight;
 

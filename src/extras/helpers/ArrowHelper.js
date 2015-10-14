@@ -14,46 +14,42 @@
  *  headWidth - Number
  */
 
-THREE.ArrowHelper = ( function () {
+THREE.ArrowHelper = function ( dir, origin, length, color, headLength, headWidth ) {
+
+	// dir is assumed to be normalized
+
+	THREE.Object3D.call( this );
+
+	if ( color === undefined ) color = 0xffff00;
+	if ( length === undefined ) length = 1;
+	if ( headLength === undefined ) headLength = 0.2 * length;
+	if ( headWidth === undefined ) headWidth = 0.2 * headLength;
+
+	this.position = origin;
 
 	var lineGeometry = new THREE.Geometry();
-	lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ), new THREE.Vector3( 0, 1, 0 ) );
+	lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
+	lineGeometry.vertices.push( new THREE.Vector3( 0, 1, 0 ) );
+
+	this.line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: color } ) );
+	this.line.matrixAutoUpdate = false;
+	this.add( this.line );
 
 	var coneGeometry = new THREE.CylinderGeometry( 0, 0.5, 1, 5, 1 );
 	coneGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, - 0.5, 0 ) );
 
-	return function ( dir, origin, length, color, headLength, headWidth ) {
+	this.cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: color } ) );
+	this.cone.matrixAutoUpdate = false;
+	this.add( this.cone );
 
-		// dir is assumed to be normalized
+	this.setDirection( dir );
+	this.setLength( length, headLength, headWidth );
 
-		THREE.Object3D.call( this );
-
-		if ( color === undefined ) color = 0xffff00;
-		if ( length === undefined ) length = 1;
-		if ( headLength === undefined ) headLength = 0.2 * length;
-		if ( headWidth === undefined ) headWidth = 0.2 * headLength;
-
-		this.position.copy( origin );
-
-		this.line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: color } ) );
-		this.line.matrixAutoUpdate = false;
-		this.add( this.line );
-
-		this.cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: color } ) );
-		this.cone.matrixAutoUpdate = false;
-		this.add( this.cone );
-
-		this.setDirection( dir );
-		this.setLength( length, headLength, headWidth );
-
-	}
-
-}() );
+};
 
 THREE.ArrowHelper.prototype = Object.create( THREE.Object3D.prototype );
-THREE.ArrowHelper.prototype.constructor = THREE.ArrowHelper;
 
-THREE.ArrowHelper.prototype.setDirection = ( function () {
+THREE.ArrowHelper.prototype.setDirection = function () {
 
 	var axis = new THREE.Vector3();
 	var radians;
@@ -82,14 +78,14 @@ THREE.ArrowHelper.prototype.setDirection = ( function () {
 
 	};
 
-}() );
+}();
 
 THREE.ArrowHelper.prototype.setLength = function ( length, headLength, headWidth ) {
 
 	if ( headLength === undefined ) headLength = 0.2 * length;
 	if ( headWidth === undefined ) headWidth = 0.2 * headLength;
 
-	this.line.scale.set( 1, length - headLength, 1 );
+	this.line.scale.set( 1, length, 1 );
 	this.line.updateMatrix();
 
 	this.cone.scale.set( headWidth, headLength, headWidth );

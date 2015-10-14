@@ -9,57 +9,52 @@ THREE.Gyroscope = function () {
 };
 
 THREE.Gyroscope.prototype = Object.create( THREE.Object3D.prototype );
-THREE.Gyroscope.prototype.constructor = THREE.Gyroscope;
 
-THREE.Gyroscope.prototype.updateMatrixWorld = ( function () {
+THREE.Gyroscope.prototype.updateMatrixWorld = function ( force ) {
 
-	var translationObject = new THREE.Vector3();
-	var quaternionObject = new THREE.Quaternion();
-	var scaleObject = new THREE.Vector3();
+	this.matrixAutoUpdate && this.updateMatrix();
 
-	var translationWorld = new THREE.Vector3();
-	var quaternionWorld = new THREE.Quaternion();
-	var scaleWorld = new THREE.Vector3();
+	// update matrixWorld
 
-	return function ( force ) {
+	if ( this.matrixWorldNeedsUpdate || force ) {
 
-		this.matrixAutoUpdate && this.updateMatrix();
+		if ( this.parent ) {
 
-		// update matrixWorld
+			this.matrixWorld.multiplyMatrices( this.parent.matrixWorld, this.matrix );
 
-		if ( this.matrixWorldNeedsUpdate || force ) {
+			this.matrixWorld.decompose( this.translationWorld, this.quaternionWorld, this.scaleWorld );
+			this.matrix.decompose( this.translationObject, this.quaternionObject, this.scaleObject );
 
-			if ( this.parent ) {
-
-				this.matrixWorld.multiplyMatrices( this.parent.matrixWorld, this.matrix );
-
-				this.matrixWorld.decompose( translationWorld, quaternionWorld, scaleWorld );
-				this.matrix.decompose( translationObject, quaternionObject, scaleObject );
-
-				this.matrixWorld.compose( translationWorld, quaternionObject, scaleWorld );
+			this.matrixWorld.compose( this.translationWorld, this.quaternionObject, this.scaleWorld );
 
 
-			} else {
+		} else {
 
-				this.matrixWorld.copy( this.matrix );
-
-			}
-
-
-			this.matrixWorldNeedsUpdate = false;
-
-			force = true;
+			this.matrixWorld.copy( this.matrix );
 
 		}
 
-		// update children
 
-		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
+		this.matrixWorldNeedsUpdate = false;
 
-			this.children[ i ].updateMatrixWorld( force );
+		force = true;
 
-		}
+	}
 
-	};
-	
-}() );
+	// update children
+
+	for ( var i = 0, l = this.children.length; i < l; i ++ ) {
+
+		this.children[ i ].updateMatrixWorld( force );
+
+	}
+
+};
+
+THREE.Gyroscope.prototype.translationWorld = new THREE.Vector3();
+THREE.Gyroscope.prototype.translationObject = new THREE.Vector3();
+THREE.Gyroscope.prototype.quaternionWorld = new THREE.Quaternion();
+THREE.Gyroscope.prototype.quaternionObject = new THREE.Quaternion();
+THREE.Gyroscope.prototype.scaleWorld = new THREE.Vector3();
+THREE.Gyroscope.prototype.scaleObject = new THREE.Vector3();
+

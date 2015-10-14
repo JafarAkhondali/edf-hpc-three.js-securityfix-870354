@@ -6,8 +6,6 @@ THREE.SpotLight = function ( color, intensity, distance, angle, exponent ) {
 
 	THREE.Light.call( this, color );
 
-	this.type = 'SpotLight';
-
 	this.position.set( 0, 1, 0 );
 	this.target = new THREE.Object3D();
 
@@ -43,7 +41,6 @@ THREE.SpotLight = function ( color, intensity, distance, angle, exponent ) {
 };
 
 THREE.SpotLight.prototype = Object.create( THREE.Light.prototype );
-THREE.SpotLight.prototype.constructor = THREE.SpotLight;
 
 THREE.SpotLight.prototype.clone = function () {
 

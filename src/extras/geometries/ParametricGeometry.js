@@ -11,14 +11,6 @@ THREE.ParametricGeometry = function ( func, slices, stacks ) {
 
 	THREE.Geometry.call( this );
 
-	this.type = 'ParametricGeometry';
-
-	this.parameters = {
-		func: func,
-		slices: slices,
-		stacks: stacks
-	};
-
 	var verts = this.vertices;
 	var faces = this.faces;
 	var uvs = this.faceVertexUvs[ 0 ];
@@ -82,4 +74,3 @@ THREE.ParametricGeometry = function ( func, slices, stacks ) {
 };
 
 THREE.ParametricGeometry.prototype = Object.create( THREE.Geometry.prototype );
-THREE.ParametricGeometry.prototype.constructor = THREE.ParametricGeometry;

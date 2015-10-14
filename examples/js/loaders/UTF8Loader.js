@@ -19,7 +19,7 @@ THREE.UTF8Loader = function () {};
 
 THREE.UTF8Loader.prototype.load = function ( jsonUrl, callback, options ) {
 
-	this.downloadModelJson( jsonUrl, callback, options );
+    this.downloadModelJson( jsonUrl, options, callback );
 
 };
 
@@ -28,15 +28,19 @@ THREE.UTF8Loader.prototype.load = function ( jsonUrl, callback, options ) {
 THREE.UTF8Loader.BufferGeometryCreator = function () {
 };
 
-THREE.UTF8Loader.BufferGeometryCreator.prototype.create = function ( attribArray, indices ) {
+THREE.UTF8Loader.BufferGeometryCreator.prototype.create = function ( attribArray, indexArray ) {
 
-	var ntris = indices.length / 3;
+	var ntris = indexArray.length / 3;
 
 	var geometry = new THREE.BufferGeometry();
 
-	var positions = new Float32Array( ntris * 3 * 3 );
-	var normals = new Float32Array( ntris * 3 * 3 );
-	var uvs = new Float32Array( ntris * 3 * 2 );
+    var positions = new THREE.Float32Attribute( ntris * 3, 3 );
+    var normals = new THREE.Float32Attribute( ntris * 3, 3 );
+    var uvs = new THREE.Float32Attribute( ntris * 3, 2 );
+
+	var positionsArray = positions.array;
+	var normalsArray = normals.array;
+	var uvsArray = uvs.array;
 
 	var i, j, offset;
 	var x, y, z;
@@ -56,9 +60,9 @@ THREE.UTF8Loader.BufferGeometryCreator.prototype.create = function ( attribArray
 		y = attribArray[ i + 1 ];
 		z = attribArray[ i + 2 ];
 
-		positions[ j++ ] = x;
-		positions[ j++ ] = y;
-		positions[ j++ ] = z;
+		positionsArray[ j++ ] = x;
+		positionsArray[ j++ ] = y;
+		positionsArray[ j++ ] = z;
 
 	}
 
@@ -72,8 +76,8 @@ THREE.UTF8Loader.BufferGeometryCreator.prototype.create = function ( attribArray
 		u = attribArray[ i ];
 		v = attribArray[ i + 1 ];
 
-		uvs[ j++ ] = u;
-		uvs[ j++ ] = v;
+		uvsArray[ j++ ] = u;
+		uvsArray[ j++ ] = v;
 
 	}
 
@@ -88,18 +92,18 @@ THREE.UTF8Loader.BufferGeometryCreator.prototype.create = function ( attribArray
 		y = attribArray[ i + 1 ];
 		z = attribArray[ i + 2 ];
 
-		normals[ j++ ] = x;
-		normals[ j++ ] = y;
-		normals[ j++ ] = z;
+		normalsArray[ j++ ] = x;
+		normalsArray[ j++ ] = y;
+		normalsArray[ j++ ] = z;
 
 	}
 
-    geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) );
-    geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-    geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) );
-    geometry.addAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+    geometry.addAttribute( 'index', indexArray, 1 );
+    geometry.addAttribute( 'position', positions );
+    geometry.addAttribute( 'normal', normals );
+    geometry.addAttribute( 'uv', uvs );
 
-    geometry.offsets.push( { start: 0, count: indices.length, index: 0 } );
+    geometry.offsets.push( { start: 0, count: indexArray.length, index: 0 } );
 
 	geometry.computeBoundingSphere();
 
@@ -690,7 +694,7 @@ THREE.UTF8Loader.prototype.downloadModel = function ( geometryBase, materialBase
 
 };
 
-THREE.UTF8Loader.prototype.downloadModelJson = function ( jsonUrl, callback, options ) {
+THREE.UTF8Loader.prototype.downloadModelJson = function ( jsonUrl, options, callback ) {
 
     getJsonRequest( jsonUrl, function( loaded ) {
 

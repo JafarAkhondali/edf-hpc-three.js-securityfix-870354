@@ -94,7 +94,7 @@ THREE.CameraHelper = function ( camera ) {
 	THREE.Line.call( this, geometry, material, THREE.LinePieces );
 
 	this.camera = camera;
-	this.matrix = camera.matrixWorld;
+	this.matrixWorld = camera.matrixWorld;
 	this.matrixAutoUpdate = false;
 
 	this.pointMap = pointMap;
@@ -104,37 +104,16 @@ THREE.CameraHelper = function ( camera ) {
 };
 
 THREE.CameraHelper.prototype = Object.create( THREE.Line.prototype );
-THREE.CameraHelper.prototype.constructor = THREE.CameraHelper;
 
 THREE.CameraHelper.prototype.update = function () {
 
-	var geometry, pointMap;
-	
 	var vector = new THREE.Vector3();
 	var camera = new THREE.Camera();
-
-	var setPoint = function ( point, x, y, z ) {
-
-		vector.set( x, y, z ).unproject( camera );
-
-		var points = pointMap[ point ];
-
-		if ( points !== undefined ) {
-
-			for ( var i = 0, il = points.length; i < il; i ++ ) {
-
-				geometry.vertices[ points[ i ] ].copy( vector );
-
-			}
-
-		}
-
-	};
+	var projector = new THREE.Projector();
 
 	return function () {
 
-		geometry = this.geometry;
-		pointMap = this.pointMap;
+		var scope = this;
 
 		var w = 1, h = 1;
 
@@ -145,42 +124,61 @@ THREE.CameraHelper.prototype.update = function () {
 
 		// center / target
 
-		setPoint( "c", 0, 0, - 1 );
+		setPoint( "c", 0, 0, -1 );
 		setPoint( "t", 0, 0,  1 );
 
 		// near
 
-		setPoint( "n1", - w, - h, - 1 );
-		setPoint( "n2",   w, - h, - 1 );
-		setPoint( "n3", - w,   h, - 1 );
-		setPoint( "n4",   w,   h, - 1 );
+		setPoint( "n1", -w, -h, -1 );
+		setPoint( "n2",  w, -h, -1 );
+		setPoint( "n3", -w,  h, -1 );
+		setPoint( "n4",  w,  h, -1 );
 
 		// far
 
-		setPoint( "f1", - w, - h, 1 );
-		setPoint( "f2",   w, - h, 1 );
-		setPoint( "f3", - w,   h, 1 );
-		setPoint( "f4",   w,   h, 1 );
+		setPoint( "f1", -w, -h, 1 );
+		setPoint( "f2",  w, -h, 1 );
+		setPoint( "f3", -w,  h, 1 );
+		setPoint( "f4",  w,  h, 1 );
 
 		// up
 
-		setPoint( "u1",   w * 0.7, h * 1.1, - 1 );
-		setPoint( "u2", - w * 0.7, h * 1.1, - 1 );
-		setPoint( "u3",         0, h * 2,   - 1 );
+		setPoint( "u1",  w * 0.7, h * 1.1, -1 );
+		setPoint( "u2", -w * 0.7, h * 1.1, -1 );
+		setPoint( "u3",        0, h * 2,   -1 );
 
 		// cross
 
-		setPoint( "cf1", - w,   0, 1 );
-		setPoint( "cf2",   w,   0, 1 );
-		setPoint( "cf3",   0, - h, 1 );
-		setPoint( "cf4",   0,   h, 1 );
+		setPoint( "cf1", -w,  0, 1 );
+		setPoint( "cf2",  w,  0, 1 );
+		setPoint( "cf3",  0, -h, 1 );
+		setPoint( "cf4",  0,  h, 1 );
 
-		setPoint( "cn1", - w,   0, - 1 );
-		setPoint( "cn2",   w,   0, - 1 );
-		setPoint( "cn3",   0, - h, - 1 );
-		setPoint( "cn4",   0,   h, - 1 );
+		setPoint( "cn1", -w,  0, -1 );
+		setPoint( "cn2",  w,  0, -1 );
+		setPoint( "cn3",  0, -h, -1 );
+		setPoint( "cn4",  0,  h, -1 );
 
-		geometry.verticesNeedUpdate = true;
+		function setPoint( point, x, y, z ) {
+
+			vector.set( x, y, z );
+			projector.unprojectVector( vector, camera );
+
+			var points = scope.pointMap[ point ];
+
+			if ( points !== undefined ) {
+
+				for ( var i = 0, il = points.length; i < il; i ++ ) {
+
+					scope.geometry.vertices[ points[ i ] ].copy( vector );
+
+				}
+
+			}
+
+		}
+
+		this.geometry.verticesNeedUpdate = true;
 
 	};
 

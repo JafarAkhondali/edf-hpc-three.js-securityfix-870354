@@ -27,7 +27,6 @@ THREE.Geometry5b = function ( bufferGeometry ) {
 };
 
 THREE.Geometry5b.prototype = Object.create( THREE.BufferGeometry.prototype );
-THREE.Geometry5b.prototype.constructor = THREE.Geometry5b;
 
 THREE.TypedVector2 = function ( array, offset ) {
 
@@ -37,7 +36,6 @@ THREE.TypedVector2 = function ( array, offset ) {
 };
 
 THREE.TypedVector2.prototype = Object.create( THREE.Vector2.prototype );
-THREE.TypedVector2.prototype.constructor = THREE.TypedVector2;
 
 Object.defineProperties( THREE.TypedVector2.prototype, {
 	'x': {
@@ -58,7 +56,6 @@ THREE.TypedVector3 = function ( array, offset ) {
 };
 
 THREE.TypedVector3.prototype = Object.create( THREE.Vector3.prototype );
-THREE.TypedVector3.prototype.constructor = THREE.TypedVector3;
 
 Object.defineProperties( THREE.TypedVector3.prototype, {
 	'x': {

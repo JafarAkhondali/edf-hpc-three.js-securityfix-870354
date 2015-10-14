@@ -8,4 +8,3 @@ THREE.ArcCurve = function ( aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise 
 };
 
 THREE.ArcCurve.prototype = Object.create( THREE.EllipseCurve.prototype );
-THREE.ArcCurve.prototype.constructor = THREE.ArcCurve;

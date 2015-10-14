@@ -6,7 +6,7 @@
 THREE.Box3 = function ( min, max ) {
 
 	this.min = ( min !== undefined ) ? min : new THREE.Vector3( Infinity, Infinity, Infinity );
-	this.max = ( max !== undefined ) ? max : new THREE.Vector3( - Infinity, - Infinity, - Infinity );
+	this.max = ( max !== undefined ) ? max : new THREE.Vector3( -Infinity, -Infinity, -Infinity );
 
 };
 
@@ -23,13 +23,60 @@ THREE.Box3.prototype = {
 
 	},
 
+	addPoint: function ( point ) {
+
+		if ( point.x < this.min.x ) {
+
+			this.min.x = point.x;
+
+		} else if ( point.x > this.max.x ) {
+
+			this.max.x = point.x;
+
+		}
+
+		if ( point.y < this.min.y ) {
+
+			this.min.y = point.y;
+
+		} else if ( point.y > this.max.y ) {
+
+			this.max.y = point.y;
+
+		}
+
+		if ( point.z < this.min.z ) {
+
+			this.min.z = point.z;
+
+		} else if ( point.z > this.max.z ) {
+
+			this.max.z = point.z;
+
+		}
+		
+		return this;
+
+	},
+
 	setFromPoints: function ( points ) {
 
-		this.makeEmpty();
+		if ( points.length > 0 ) {
 
-		for ( var i = 0, il = points.length; i < il; i ++ ) {
+			var point = points[ 0 ];
 
-			this.expandByPoint( points[ i ] )
+			this.min.copy( point );
+			this.max.copy( point );
+
+			for ( var i = 1, il = points.length; i < il; i ++ ) {
+
+				this.addPoint( points[ i ] )
+
+			}
+
+		} else {
+
+			this.makeEmpty();
 
 		}
 
@@ -37,7 +84,7 @@ THREE.Box3.prototype = {
 
 	},
 
-	setFromCenterAndSize: function () {
+	setFromCenterAndSize: function() {
 
 		var v1 = new THREE.Vector3();
 
@@ -54,14 +101,14 @@ THREE.Box3.prototype = {
 
 	}(),
 
-	setFromObject: function () {
+	setFromObject: function() {
 
 		// Computes the world-axis-aligned bounding box of an object (including its children),
 		// accounting for both the object's, and childrens', world transforms
 
 		var v1 = new THREE.Vector3();
 
-		return function ( object ) {
+		return function( object ) {
 
 			var scope = this;
 
@@ -71,37 +118,17 @@ THREE.Box3.prototype = {
 
 			object.traverse( function ( node ) {
 
-				var geometry = node.geometry;
+				if ( node.geometry !== undefined && node.geometry.vertices !== undefined ) {
 
-				if ( geometry !== undefined ) {
+					var vertices = node.geometry.vertices;
 
-					if ( geometry instanceof THREE.Geometry ) {
+					for ( var i = 0, il = vertices.length; i < il; i++ ) {
 
-						var vertices = geometry.vertices;
+						v1.copy( vertices[ i ] );
 
-						for ( var i = 0, il = vertices.length; i < il; i ++ ) {
+						v1.applyMatrix4( node.matrixWorld );
 
-							v1.copy( vertices[ i ] );
-
-							v1.applyMatrix4( node.matrixWorld );
-
-							scope.expandByPoint( v1 );
-
-						}
-
-					} else if ( geometry instanceof THREE.BufferGeometry && geometry.attributes[ 'position' ] !== undefined ) {
-
-						var positions = geometry.attributes[ 'position' ].array;
-
-						for ( var i = 0, il = positions.length; i < il; i += 3 ) {
-
-							v1.set( positions[ i ], positions[ i + 1 ], positions[ i + 2 ] );
-
-							v1.applyMatrix4( node.matrixWorld );
-
-							scope.expandByPoint( v1 );
-
-						}
+						scope.expandByPoint( v1 );
 
 					}
 
@@ -127,7 +154,7 @@ THREE.Box3.prototype = {
 	makeEmpty: function () {
 
 		this.min.x = this.min.y = this.min.z = Infinity;
-		this.max.x = this.max.y = this.max.z = - Infinity;
+		this.max.x = this.max.y = this.max.z = -Infinity;
 
 		return this;
 
@@ -175,7 +202,7 @@ THREE.Box3.prototype = {
 
 	expandByScalar: function ( scalar ) {
 
-		this.min.addScalar( - scalar );
+		this.min.addScalar( -scalar );
 		this.max.addScalar( scalar );
 
 		return this;
@@ -248,7 +275,7 @@ THREE.Box3.prototype = {
 
 	},
 
-	distanceToPoint: function () {
+	distanceToPoint: function() {
 
 		var v1 = new THREE.Vector3();
 
@@ -261,7 +288,7 @@ THREE.Box3.prototype = {
 
 	}(),
 
-	getBoundingSphere: function () {
+	getBoundingSphere: function() {
 
 		var v1 = new THREE.Vector3();
 
@@ -296,7 +323,7 @@ THREE.Box3.prototype = {
 
 	},
 
-	applyMatrix4: function () {
+	applyMatrix4: function() {
 
 		var points = [
 			new THREE.Vector3(),
@@ -312,14 +339,14 @@ THREE.Box3.prototype = {
 		return function ( matrix ) {
 
 			// NOTE: I am using a binary pattern to specify all 2^3 combinations below
-			points[ 0 ].set( this.min.x, this.min.y, this.min.z ).applyMatrix4( matrix ); // 000
-			points[ 1 ].set( this.min.x, this.min.y, this.max.z ).applyMatrix4( matrix ); // 001
-			points[ 2 ].set( this.min.x, this.max.y, this.min.z ).applyMatrix4( matrix ); // 010
-			points[ 3 ].set( this.min.x, this.max.y, this.max.z ).applyMatrix4( matrix ); // 011
-			points[ 4 ].set( this.max.x, this.min.y, this.min.z ).applyMatrix4( matrix ); // 100
-			points[ 5 ].set( this.max.x, this.min.y, this.max.z ).applyMatrix4( matrix ); // 101
-			points[ 6 ].set( this.max.x, this.max.y, this.min.z ).applyMatrix4( matrix ); // 110
-			points[ 7 ].set( this.max.x, this.max.y, this.max.z ).applyMatrix4( matrix );  // 111
+			points[0].set( this.min.x, this.min.y, this.min.z ).applyMatrix4( matrix ); // 000
+			points[1].set( this.min.x, this.min.y, this.max.z ).applyMatrix4( matrix ); // 001
+			points[2].set( this.min.x, this.max.y, this.min.z ).applyMatrix4( matrix ); // 010
+			points[3].set( this.min.x, this.max.y, this.max.z ).applyMatrix4( matrix ); // 011
+			points[4].set( this.max.x, this.min.y, this.min.z ).applyMatrix4( matrix ); // 100
+			points[5].set( this.max.x, this.min.y, this.max.z ).applyMatrix4( matrix ); // 101
+			points[6].set( this.max.x, this.max.y, this.min.z ).applyMatrix4( matrix ); // 110
+			points[7].set( this.max.x, this.max.y, this.max.z ).applyMatrix4( matrix );  // 111
 
 			this.makeEmpty();
 			this.setFromPoints( points );

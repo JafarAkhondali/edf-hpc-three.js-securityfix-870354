@@ -6,15 +6,12 @@ THREE.PointLight = function ( color, intensity, distance ) {
 
 	THREE.Light.call( this, color );
 
-	this.type = 'PointLight';
-
 	this.intensity = ( intensity !== undefined ) ? intensity : 1;
 	this.distance = ( distance !== undefined ) ? distance : 0;
 
 };
 
 THREE.PointLight.prototype = Object.create( THREE.Light.prototype );
-THREE.PointLight.prototype.constructor = THREE.PointLight;
 
 THREE.PointLight.prototype.clone = function () {
 

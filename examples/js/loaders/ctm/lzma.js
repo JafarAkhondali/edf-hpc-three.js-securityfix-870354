@@ -1,13 +1,6 @@
 
 var LZMA = LZMA || {};
 
-// browserify support
-if ( typeof module === 'object' ) {
-
-	module.exports = LZMA;
-
-}
-
 LZMA.OutWindow = function(){
   this._windowSize = 0;
 };

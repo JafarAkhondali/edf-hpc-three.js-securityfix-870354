@@ -14,7 +14,6 @@ THREE.LOD = function () {
 
 
 THREE.LOD.prototype = Object.create( THREE.Object3D.prototype );
-THREE.LOD.prototype.constructor = THREE.LOD;
 
 THREE.LOD.prototype.addLevel = function ( object, distance ) {
 
@@ -53,22 +52,6 @@ THREE.LOD.prototype.getObjectForDistance = function ( distance ) {
 
 };
 
-THREE.LOD.prototype.raycast = ( function () {
-
-	var matrixPosition = new THREE.Vector3();
-
-	return function ( raycaster, intersects ) {
-
-		matrixPosition.setFromMatrixPosition( this.matrixWorld );
-
-		var distance = raycaster.ray.origin.distanceTo( matrixPosition );
-
-		this.getObjectForDistance( distance ).raycast( raycaster, intersects );
-
-	};
-
-}() );
-
 THREE.LOD.prototype.update = function () {
 
 	var v1 = new THREE.Vector3();
@@ -100,7 +83,7 @@ THREE.LOD.prototype.update = function () {
 
 			}
 
-			for ( ; i < l; i ++ ) {
+			for( ; i < l; i ++ ) {
 
 				this.objects[ i ].object.visible = false;
 
@@ -119,9 +102,9 @@ THREE.LOD.prototype.clone = function ( object ) {
 	THREE.Object3D.prototype.clone.call( this, object );
 
 	for ( var i = 0, l = this.objects.length; i < l; i ++ ) {
-		var x = this.objects[ i ].object.clone();
+		var x = this.objects[i].object.clone();
 		x.visible = i === 0;
-		object.addLevel( x, this.objects[ i ].distance );
+		object.addLevel( x, this.objects[i].distance );
 	}
 
 	return object;
