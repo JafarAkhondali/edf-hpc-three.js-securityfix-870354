@@ -1,3 +1,9 @@
+three.js (67+dfsg1-1+c9+1) calibre9; urgency=medium
+
+  * Backport to Calibre 9
+
+ -- Rémi Palancher <remi@rezib.org>  Wed, 14 Oct 2015 10:17:10 +0200
+
 three.js (67+dfsg1-1) unstable; urgency=medium
 
   * Back to upstream version 67+dfsg1
