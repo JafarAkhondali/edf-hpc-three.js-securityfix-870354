@@ -47,7 +47,7 @@ THREE.Vector2.prototype = {
 
 			case 0: this.x = value; break;
 			case 1: this.y = value; break;
-			default: throw new Error( "index is out of range: " + index );
+			default: throw new Error( 'index is out of range: ' + index );
 
 		}
 
@@ -59,9 +59,15 @@ THREE.Vector2.prototype = {
 
 			case 0: return this.x;
 			case 1: return this.y;
-			default: throw new Error( "index is out of range: " + index );
+			default: throw new Error( 'index is out of range: ' + index );
 
 		}
+
+	},
+
+	clone: function () {
+
+		return new this.constructor( this.x, this.y );
 
 	},
 
@@ -78,22 +84,13 @@ THREE.Vector2.prototype = {
 
 		if ( w !== undefined ) {
 
-			console.warn( 'DEPRECATED: Vector2\'s .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
 			return this.addVectors( v, w );
 
 		}
 
 		this.x += v.x;
 		this.y += v.y;
-
-		return this;
-
-	},
-
-	addVectors: function ( a, b ) {
-
-		this.x = a.x + b.x;
-		this.y = a.y + b.y;
 
 		return this;
 
@@ -108,17 +105,44 @@ THREE.Vector2.prototype = {
 
 	},
 
+	addVectors: function ( a, b ) {
+
+		this.x = a.x + b.x;
+		this.y = a.y + b.y;
+
+		return this;
+
+	},
+
+	addScaledVector: function ( v, s ) {
+
+		this.x += v.x * s;
+		this.y += v.y * s;
+
+		return this;
+
+	},
+
 	sub: function ( v, w ) {
 
 		if ( w !== undefined ) {
 
-			console.warn( 'DEPRECATED: Vector2\'s .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
 			return this.subVectors( v, w );
 
 		}
 
 		this.x -= v.x;
 		this.y -= v.y;
+
+		return this;
+
+	},
+
+	subScalar: function ( s ) {
+
+		this.x -= s;
+		this.y -= s;
 
 		return this;
 
@@ -132,7 +156,7 @@ THREE.Vector2.prototype = {
 		return this;
 
 	},
-	
+
 	multiply: function ( v ) {
 
 		this.x *= v.x;
@@ -241,13 +265,14 @@ THREE.Vector2.prototype = {
 		}
 
 		return this;
+
 	},
 
-	clampScalar: ( function () {
+	clampScalar: function () {
 
 		var min, max;
 
-		return function ( minVal, maxVal ) {
+		return function clampScalar( minVal, maxVal ) {
 
 			if ( min === undefined ) {
 
@@ -262,8 +287,8 @@ THREE.Vector2.prototype = {
 			return this.clamp( min, max );
 
 		};
-		
-	} )(),
+
+	}(),
 
 	floor: function () {
 
@@ -303,7 +328,10 @@ THREE.Vector2.prototype = {
 
 	negate: function () {
 
-		return this.multiplyScalar( - 1 );
+		this.x = - this.x;
+		this.y = - this.y;
+
+		return this;
 
 	},
 
@@ -322,6 +350,12 @@ THREE.Vector2.prototype = {
 	length: function () {
 
 		return Math.sqrt( this.x * this.x + this.y * this.y );
+
+	},
+
+	lengthManhattan: function() {
+
+		return Math.abs( this.x ) + Math.abs( this.y );
 
 	},
 
@@ -351,6 +385,7 @@ THREE.Vector2.prototype = {
 		if ( oldLength !== 0 && l !== oldLength ) {
 
 			this.multiplyScalar( l / oldLength );
+
 		}
 
 		return this;
@@ -366,30 +401,53 @@ THREE.Vector2.prototype = {
 
 	},
 
-	equals: function( v ) {
+	lerpVectors: function ( v1, v2, alpha ) {
 
-		return ( ( v.x === this.x ) && ( v.y === this.y ) );
-
-	},
-
-	fromArray: function ( array ) {
-
-		this.x = array[ 0 ];
-		this.y = array[ 1 ];
+		this.subVectors( v2, v1 ).multiplyScalar( alpha ).add( v1 );
 
 		return this;
 
 	},
 
-	toArray: function () {
+	equals: function ( v ) {
 
-		return [ this.x, this.y ];
+		return ( ( v.x === this.x ) && ( v.y === this.y ) );
 
 	},
 
-	clone: function () {
+	fromArray: function ( array, offset ) {
 
-		return new THREE.Vector2( this.x, this.y );
+		if ( offset === undefined ) offset = 0;
+
+		this.x = array[ offset ];
+		this.y = array[ offset + 1 ];
+
+		return this;
+
+	},
+
+	toArray: function ( array, offset ) {
+
+		if ( array === undefined ) array = [];
+		if ( offset === undefined ) offset = 0;
+
+		array[ offset ] = this.x;
+		array[ offset + 1 ] = this.y;
+
+		return array;
+
+	},
+
+	fromAttribute: function ( attribute, index, offset ) {
+
+		if ( offset === undefined ) offset = 0;
+
+		index = index * attribute.itemSize + offset;
+
+		this.x = attribute.array[ index ];
+		this.y = attribute.array[ index + 1 ];
+
+		return this;
 
 	}
 

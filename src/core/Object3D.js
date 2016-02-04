@@ -3,51 +3,74 @@
  * @author mikael emtinger / http://gomo.se/
  * @author alteredq / http://alteredqualia.com/
  * @author WestLangley / http://github.com/WestLangley
+ * @author elephantatwork / www.elephantatwork.ch
  */
 
 THREE.Object3D = function () {
 
-	this.id = THREE.Object3DIdCount ++;
+	Object.defineProperty( this, 'id', { value: THREE.Object3DIdCount ++ } );
+
 	this.uuid = THREE.Math.generateUUID();
 
 	this.name = '';
+	this.type = 'Object3D';
 
-	this.parent = undefined;
+	this.parent = null;
 	this.children = [];
 
-	this.up = new THREE.Vector3( 0, 1, 0 );
+	this.up = THREE.Object3D.DefaultUp.clone();
 
-	this.position = new THREE.Vector3();
+	var position = new THREE.Vector3();
+	var rotation = new THREE.Euler();
+	var quaternion = new THREE.Quaternion();
+	var scale = new THREE.Vector3( 1, 1, 1 );
 
-	var scope = this;
+	var onRotationChange = function () {
+
+		quaternion.setFromEuler( rotation, false );
+
+	};
+
+	var onQuaternionChange = function () {
+
+		rotation.setFromQuaternion( quaternion, undefined, false );
+
+	};
+
+	rotation.onChange( onRotationChange );
+	quaternion.onChange( onQuaternionChange );
 
 	Object.defineProperties( this, {
+		position: {
+			enumerable: true,
+			value: position
+		},
 		rotation: {
 			enumerable: true,
-			value: new THREE.Euler().onChange( function () {
-				scope.quaternion.setFromEuler( scope.rotation, false );
-			} )
+			value: rotation
 		},
 		quaternion: {
 			enumerable: true,
-			value: new THREE.Quaternion().onChange( function () {
-				scope.rotation.setFromQuaternion( scope.quaternion, undefined, false );
-			} )
+			value: quaternion
 		},
 		scale: {
 			enumerable: true,
-			value: new THREE.Vector3( 1, 1, 1 )
+			value: scale
+		},
+		modelViewMatrix: {
+			value: new THREE.Matrix4()
+		},
+		normalMatrix: {
+			value: new THREE.Matrix3()
 		}
 	} );
-
-	this.renderDepth = null;
 
 	this.rotationAutoUpdate = true;
 
 	this.matrix = new THREE.Matrix4();
 	this.matrixWorld = new THREE.Matrix4();
 
-	this.matrixAutoUpdate = true;
+	this.matrixAutoUpdate = THREE.Object3D.DefaultMatrixAutoUpdate;
 	this.matrixWorldNeedsUpdate = false;
 
 	this.visible = true;
@@ -56,11 +79,14 @@ THREE.Object3D = function () {
 	this.receiveShadow = false;
 
 	this.frustumCulled = true;
+	this.renderOrder = 0;
 
 	this.userData = {};
 
 };
 
+THREE.Object3D.DefaultUp = new THREE.Vector3( 0, 1, 0 );
+THREE.Object3D.DefaultMatrixAutoUpdate = true;
 
 THREE.Object3D.prototype = {
 
@@ -68,7 +94,7 @@ THREE.Object3D.prototype = {
 
 	get eulerOrder () {
 
-		console.warn( 'DEPRECATED: Object3D\'s .eulerOrder has been moved to Object3D\'s .rotation.order.' );
+		console.warn( 'THREE.Object3D: .eulerOrder has been moved to .rotation.order.' );
 
 		return this.rotation.order;
 
@@ -76,7 +102,7 @@ THREE.Object3D.prototype = {
 
 	set eulerOrder ( value ) {
 
-		console.warn( 'DEPRECATED: Object3D\'s .eulerOrder has been moved to Object3D\'s .rotation.order.' );
+		console.warn( 'THREE.Object3D: .eulerOrder has been moved to .rotation.order.' );
 
 		this.rotation.order = value;
 
@@ -84,13 +110,19 @@ THREE.Object3D.prototype = {
 
 	get useQuaternion () {
 
-		console.warn( 'DEPRECATED: Object3D\'s .useQuaternion has been removed. The library now uses quaternions by default.' );
+		console.warn( 'THREE.Object3D: .useQuaternion has been removed. The library now uses quaternions by default.' );
 
 	},
 
 	set useQuaternion ( value ) {
 
-		console.warn( 'DEPRECATED: Object3D\'s .useQuaternion has been removed. The library now uses quaternions by default.' );
+		console.warn( 'THREE.Object3D: .useQuaternion has been removed. The library now uses quaternions by default.' );
+
+	},
+
+	set renderDepth ( value ) {
+
+		console.warn( 'THREE.Object3D: .renderDepth has been removed. Use .renderOrder, instead.' );
 
 	},
 
@@ -132,7 +164,7 @@ THREE.Object3D.prototype = {
 
 	},
 
-	rotateOnAxis: function() {
+	rotateOnAxis: function () {
 
 		// rotate object on axis in object space
 		// axis is assumed to be normalized
@@ -147,7 +179,7 @@ THREE.Object3D.prototype = {
 
 			return this;
 
-		}
+		};
 
 	}(),
 
@@ -196,21 +228,19 @@ THREE.Object3D.prototype = {
 
 		return function ( axis, distance ) {
 
-			v1.copy( axis );
-
-			v1.applyQuaternion( this.quaternion );
+			v1.copy( axis ).applyQuaternion( this.quaternion );
 
 			this.position.add( v1.multiplyScalar( distance ) );
 
 			return this;
 
-		}
+		};
 
 	}(),
 
 	translate: function ( distance, axis ) {
 
-		console.warn( 'DEPRECATED: Object3D\'s .translate() has been removed. Use .translateOnAxis( axis, distance ) instead. Note args have been changed.' );
+		console.warn( 'THREE.Object3D: .translate() has been removed. Use .translateOnAxis( axis, distance ) instead.' );
 		return this.translateOnAxis( axis, distance );
 
 	},
@@ -287,16 +317,28 @@ THREE.Object3D.prototype = {
 
 	add: function ( object ) {
 
+		if ( arguments.length > 1 ) {
+
+			for ( var i = 0; i < arguments.length; i ++ ) {
+
+				this.add( arguments[ i ] );
+
+			}
+
+			return this;
+
+		}
+
 		if ( object === this ) {
 
-			console.warn( 'THREE.Object3D.add: An object can\'t be added as a child of itself.' );
-			return;
+			console.error( "THREE.Object3D.add: object can't be added as a child of itself.", object );
+			return this;
 
 		}
 
 		if ( object instanceof THREE.Object3D ) {
 
-			if ( object.parent !== undefined ) {
+			if ( object.parent !== null ) {
 
 				object.parent.remove( object );
 
@@ -307,149 +349,205 @@ THREE.Object3D.prototype = {
 
 			this.children.push( object );
 
-			// add to scene
+		} else {
 
-			var scene = this;
-
-			while ( scene.parent !== undefined ) {
-
-				scene = scene.parent;
-
-			}
-
-			if ( scene !== undefined && scene instanceof THREE.Scene )  {
-
-				scene.__addObject( object );
-
-			}
+			console.error( "THREE.Object3D.add: object not an instance of THREE.Object3D.", object );
 
 		}
+
+		return this;
 
 	},
 
 	remove: function ( object ) {
 
-		var index = this.children.indexOf( object );
+		if ( arguments.length > 1 ) {
 
-		if ( index !== - 1 ) {
+			for ( var i = 0; i < arguments.length; i ++ ) {
 
-			object.parent = undefined;
-			object.dispatchEvent( { type: 'removed' } );
-
-			this.children.splice( index, 1 );
-
-			// remove from scene
-
-			var scene = this;
-
-			while ( scene.parent !== undefined ) {
-
-				scene = scene.parent;
-
-			}
-
-			if ( scene !== undefined && scene instanceof THREE.Scene ) {
-
-				scene.__removeObject( object );
+				this.remove( arguments[ i ] );
 
 			}
 
 		}
 
+		var index = this.children.indexOf( object );
+
+		if ( index !== - 1 ) {
+
+			object.parent = null;
+
+			object.dispatchEvent( { type: 'removed' } );
+
+			this.children.splice( index, 1 );
+
+		}
+
 	},
+
+	getChildByName: function ( name ) {
+
+		console.warn( 'THREE.Object3D: .getChildByName() has been renamed to .getObjectByName().' );
+		return this.getObjectByName( name );
+
+	},
+
+	getObjectById: function ( id ) {
+
+		return this.getObjectByProperty( 'id', id );
+
+	},
+
+	getObjectByName: function ( name ) {
+
+		return this.getObjectByProperty( 'name', name );
+
+	},
+
+	getObjectByProperty: function ( name, value ) {
+
+		if ( this[ name ] === value ) return this;
+
+		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
+
+			var child = this.children[ i ];
+			var object = child.getObjectByProperty( name, value );
+
+			if ( object !== undefined ) {
+
+				return object;
+
+			}
+
+		}
+
+		return undefined;
+
+	},
+
+	getWorldPosition: function ( optionalTarget ) {
+
+		var result = optionalTarget || new THREE.Vector3();
+
+		this.updateMatrixWorld( true );
+
+		return result.setFromMatrixPosition( this.matrixWorld );
+
+	},
+
+	getWorldQuaternion: function () {
+
+		var position = new THREE.Vector3();
+		var scale = new THREE.Vector3();
+
+		return function ( optionalTarget ) {
+
+			var result = optionalTarget || new THREE.Quaternion();
+
+			this.updateMatrixWorld( true );
+
+			this.matrixWorld.decompose( position, result, scale );
+
+			return result;
+
+		};
+
+	}(),
+
+	getWorldRotation: function () {
+
+		var quaternion = new THREE.Quaternion();
+
+		return function ( optionalTarget ) {
+
+			var result = optionalTarget || new THREE.Euler();
+
+			this.getWorldQuaternion( quaternion );
+
+			return result.setFromQuaternion( quaternion, this.rotation.order, false );
+
+		};
+
+	}(),
+
+	getWorldScale: function () {
+
+		var position = new THREE.Vector3();
+		var quaternion = new THREE.Quaternion();
+
+		return function ( optionalTarget ) {
+
+			var result = optionalTarget || new THREE.Vector3();
+
+			this.updateMatrixWorld( true );
+
+			this.matrixWorld.decompose( position, quaternion, result );
+
+			return result;
+
+		};
+
+	}(),
+
+	getWorldDirection: function () {
+
+		var quaternion = new THREE.Quaternion();
+
+		return function ( optionalTarget ) {
+
+			var result = optionalTarget || new THREE.Vector3();
+
+			this.getWorldQuaternion( quaternion );
+
+			return result.set( 0, 0, 1 ).applyQuaternion( quaternion );
+
+		};
+
+	}(),
+
+	raycast: function () {},
 
 	traverse: function ( callback ) {
 
 		callback( this );
 
-		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
+		var children = this.children;
 
-			this.children[ i ].traverse( callback );
+		for ( var i = 0, l = children.length; i < l; i ++ ) {
+
+			children[ i ].traverse( callback );
 
 		}
 
 	},
 
-	getObjectById: function ( id, recursive ) {
+	traverseVisible: function ( callback ) {
 
-		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
+		if ( this.visible === false ) return;
 
-			var child = this.children[ i ];
+		callback( this );
 
-			if ( child.id === id ) {
+		var children = this.children;
 
-				return child;
+		for ( var i = 0, l = children.length; i < l; i ++ ) {
 
-			}
-
-			if ( recursive === true ) {
-
-				child = child.getObjectById( id, recursive );
-
-				if ( child !== undefined ) {
-
-					return child;
-
-				}
-
-			}
+			children[ i ].traverseVisible( callback );
 
 		}
 
-		return undefined;
-
 	},
 
-	getObjectByName: function ( name, recursive ) {
+	traverseAncestors: function ( callback ) {
 
-		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
+		var parent = this.parent;
 
-			var child = this.children[ i ];
+		if ( parent !== null ) {
 
-			if ( child.name === name ) {
+			callback( parent );
 
-				return child;
-
-			}
-
-			if ( recursive === true ) {
-
-				child = child.getObjectByName( name, recursive );
-
-				if ( child !== undefined ) {
-
-					return child;
-
-				}
-
-			}
+			parent.traverseAncestors( callback );
 
 		}
-
-		return undefined;
-
-	},
-
-	getChildByName: function ( name, recursive ) {
-
-		console.warn( 'DEPRECATED: Object3D\'s .getChildByName() has been renamed to .getObjectByName().' );
-		return this.getObjectByName( name, recursive );
-
-	},
-
-	getDescendants: function ( array ) {
-
-		if ( array === undefined ) array = [];
-
-		Array.prototype.push.apply( array, this.children );
-
-		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
-
-			this.children[ i ].getDescendants( array );
-
-		}
-
-		return array;
 
 	},
 
@@ -467,7 +565,7 @@ THREE.Object3D.prototype = {
 
 		if ( this.matrixWorldNeedsUpdate === true || force === true ) {
 
-			if ( this.parent === undefined ) {
+			if ( this.parent === null ) {
 
 				this.matrixWorld.copy( this.matrix );
 
@@ -493,50 +591,140 @@ THREE.Object3D.prototype = {
 
 	},
 
-	clone: function ( object, recursive ) {
+	toJSON: function ( meta ) {
 
-		if ( object === undefined ) object = new THREE.Object3D();
-		if ( recursive === undefined ) recursive = true;
+		var isRootObject = ( meta === undefined );
 
-		object.name = this.name;
+		var data = {};
+		var output = { object: data };
 
-		object.up.copy( this.up );
+		// meta is a hash used to collect geometries, materials.
+		// not providing it implies that this is the root object
+		// being serialized.
+		if ( isRootObject ) {
 
-		object.position.copy( this.position );
-		object.quaternion.copy( this.quaternion );
-		object.scale.copy( this.scale );
+			// initialize meta obj
+			meta = {
+				geometries: {},
+				materials: {},
+				textures: {},
+				images: {}
+			};
 
-		object.renderDepth = this.renderDepth;
+			output.metadata = {
+				version: 4.4,
+				type: 'Object',
+				generator: 'Object3D.toJSON'
+			};
 
-		object.rotationAutoUpdate = this.rotationAutoUpdate;
+		}
 
-		object.matrix.copy( this.matrix );
-		object.matrixWorld.copy( this.matrixWorld );
+		// standard Object3D serialization
 
-		object.matrixAutoUpdate = this.matrixAutoUpdate;
-		object.matrixWorldNeedsUpdate = this.matrixWorldNeedsUpdate;
+		data.uuid = this.uuid;
+		data.type = this.type;
 
-		object.visible = this.visible;
+		if ( this.name !== '' ) data.name = this.name;
+		if ( JSON.stringify( this.userData ) !== '{}' ) data.userData = this.userData;
+		if ( this.visible !== true ) data.visible = this.visible;
 
-		object.castShadow = this.castShadow;
-		object.receiveShadow = this.receiveShadow;
+		data.matrix = this.matrix.toArray();
 
-		object.frustumCulled = this.frustumCulled;
+		if ( this.children.length > 0 ) {
 
-		object.userData = JSON.parse( JSON.stringify( this.userData ) );
-
-		if ( recursive === true ) {
+			data.children = [];
 
 			for ( var i = 0; i < this.children.length; i ++ ) {
 
-				var child = this.children[ i ];
-				object.add( child.clone() );
+				data.children.push( this.children[ i ].toJSON( meta ).object );
 
 			}
 
 		}
 
-		return object;
+		if ( isRootObject ) {
+
+			var geometries = extractFromCache( meta.geometries );
+			var materials = extractFromCache( meta.materials );
+			var textures = extractFromCache( meta.textures );
+			var images = extractFromCache( meta.images );
+
+			if ( geometries.length > 0 ) output.geometries = geometries;
+			if ( materials.length > 0 ) output.materials = materials;
+			if ( textures.length > 0 ) output.textures = textures;
+			if ( images.length > 0 ) output.images = images;
+
+		}
+
+		return output;
+
+		// extract data from the cache hash
+		// remove metadata on each item
+		// and return as array
+		function extractFromCache ( cache ) {
+
+			var values = [];
+			for ( var key in cache ) {
+
+				var data = cache[ key ];
+				delete data.metadata;
+				values.push( data );
+
+			}
+			return values;
+
+		}
+
+	},
+
+	clone: function ( recursive ) {
+
+		return new this.constructor().copy( this, recursive );
+
+	},
+
+	copy: function ( source, recursive ) {
+
+		if ( recursive === undefined ) recursive = true;
+
+		this.name = source.name;
+
+		this.up.copy( source.up );
+
+		this.position.copy( source.position );
+		this.quaternion.copy( source.quaternion );
+		this.scale.copy( source.scale );
+
+		this.rotationAutoUpdate = source.rotationAutoUpdate;
+
+		this.matrix.copy( source.matrix );
+		this.matrixWorld.copy( source.matrixWorld );
+
+		this.matrixAutoUpdate = source.matrixAutoUpdate;
+		this.matrixWorldNeedsUpdate = source.matrixWorldNeedsUpdate;
+
+		this.visible = source.visible;
+
+		this.castShadow = source.castShadow;
+		this.receiveShadow = source.receiveShadow;
+
+		this.frustumCulled = source.frustumCulled;
+		this.renderOrder = source.renderOrder;
+
+		this.userData = JSON.parse( JSON.stringify( source.userData ) );
+
+		if ( recursive === true ) {
+
+			for ( var i = 0; i < source.children.length; i ++ ) {
+
+				var child = source.children[ i ];
+				this.add( child.clone() );
+
+			}
+
+		}
+
+		return this;
 
 	}
 

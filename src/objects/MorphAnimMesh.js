@@ -6,6 +6,8 @@ THREE.MorphAnimMesh = function ( geometry, material ) {
 
 	THREE.Mesh.call( this, geometry, material );
 
+	this.type = 'MorphAnimMesh';
+
 	// API
 
 	this.duration = 1000; // milliseconds
@@ -20,11 +22,12 @@ THREE.MorphAnimMesh = function ( geometry, material ) {
 	this.direction = 1;
 	this.directionBackwards = false;
 
-	this.setFrameRange( 0, this.geometry.morphTargets.length - 1 );
+	this.setFrameRange( 0, geometry.morphTargets.length - 1 );
 
 };
 
 THREE.MorphAnimMesh.prototype = Object.create( THREE.Mesh.prototype );
+THREE.MorphAnimMesh.prototype.constructor = THREE.MorphAnimMesh;
 
 THREE.MorphAnimMesh.prototype.setFrameRange = function ( start, end ) {
 
@@ -44,7 +47,7 @@ THREE.MorphAnimMesh.prototype.setDirectionForward = function () {
 
 THREE.MorphAnimMesh.prototype.setDirectionBackward = function () {
 
-	this.direction = -1;
+	this.direction = - 1;
 	this.directionBackwards = true;
 
 };
@@ -57,7 +60,7 @@ THREE.MorphAnimMesh.prototype.parseAnimations = function () {
 
 	var firstAnimation, animations = geometry.animations;
 
-	var pattern = /([a-z]+)(\d+)/;
+	var pattern = /([a-z]+)_?(\d+)/;
 
 	for ( var i = 0, il = geometry.morphTargets.length; i < il; i ++ ) {
 
@@ -67,9 +70,8 @@ THREE.MorphAnimMesh.prototype.parseAnimations = function () {
 		if ( parts && parts.length > 1 ) {
 
 			var label = parts[ 1 ];
-			var num = parts[ 2 ];
 
-			if ( ! animations[ label ] ) animations[ label ] = { start: Infinity, end: -Infinity };
+			if ( ! animations[ label ] ) animations[ label ] = { start: Infinity, end: - Infinity };
 
 			var animation = animations[ label ];
 
@@ -106,7 +108,7 @@ THREE.MorphAnimMesh.prototype.playAnimation = function ( label, fps ) {
 
 	} else {
 
-		console.warn( "animation[" + label + "] undefined" );
+		console.warn( 'THREE.MorphAnimMesh: animation[' + label + '] undefined in .playAnimation()' );
 
 	}
 
@@ -122,7 +124,7 @@ THREE.MorphAnimMesh.prototype.updateAnimation = function ( delta ) {
 
 		if ( this.time > this.duration || this.time < 0 ) {
 
-			this.direction *= -1;
+			this.direction *= - 1;
 
 			if ( this.time > this.duration ) {
 
@@ -150,12 +152,13 @@ THREE.MorphAnimMesh.prototype.updateAnimation = function ( delta ) {
 
 	var keyframe = this.startKeyframe + THREE.Math.clamp( Math.floor( this.time / frameTime ), 0, this.length - 1 );
 
+	var influences = this.morphTargetInfluences;
+
 	if ( keyframe !== this.currentKeyframe ) {
 
-		this.morphTargetInfluences[ this.lastKeyframe ] = 0;
-		this.morphTargetInfluences[ this.currentKeyframe ] = 1;
-
-		this.morphTargetInfluences[ keyframe ] = 0;
+		influences[ this.lastKeyframe ] = 0;
+		influences[ this.currentKeyframe ] = 1;
+		influences[ keyframe ] = 0;
 
 		this.lastKeyframe = this.currentKeyframe;
 		this.currentKeyframe = keyframe;
@@ -170,27 +173,40 @@ THREE.MorphAnimMesh.prototype.updateAnimation = function ( delta ) {
 
 	}
 
-	this.morphTargetInfluences[ this.currentKeyframe ] = mix;
-	this.morphTargetInfluences[ this.lastKeyframe ] = 1 - mix;
+	influences[ this.currentKeyframe ] = mix;
+	influences[ this.lastKeyframe ] = 1 - mix;
 
 };
 
-THREE.MorphAnimMesh.prototype.clone = function ( object ) {
+THREE.MorphAnimMesh.prototype.interpolateTargets = function ( a, b, t ) {
 
-	if ( object === undefined ) object = new THREE.MorphAnimMesh( this.geometry, this.material );
+	var influences = this.morphTargetInfluences;
 
-	object.duration = this.duration;
-	object.mirroredLoop = this.mirroredLoop;
-	object.time = this.time;
+	for ( var i = 0, l = influences.length; i < l; i ++ ) {
 
-	object.lastKeyframe = this.lastKeyframe;
-	object.currentKeyframe = this.currentKeyframe;
+		influences[ i ] = 0;
 
-	object.direction = this.direction;
-	object.directionBackwards = this.directionBackwards;
+	}
 
-	THREE.Mesh.prototype.clone.call( this, object );
+	if ( a > - 1 ) influences[ a ] = 1 - t;
+	if ( b > - 1 ) influences[ b ] = t;
 
-	return object;
+};
+
+THREE.MorphAnimMesh.prototype.copy = function ( source ) {
+
+	THREE.Mesh.prototype.copy.call( this, source );
+
+	this.duration = source.duration;
+	this.mirroredLoop = source.mirroredLoop;
+	this.time = source.time;
+
+	this.lastKeyframe = source.lastKeyframe;
+	this.currentKeyframe = source.currentKeyframe;
+
+	this.direction = source.direction;
+	this.directionBackwards = source.directionBackwards;
+
+	return this;
 
 };
