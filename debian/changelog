@@ -1,3 +1,11 @@
+three.js (72+dfsg1-1) unstable; urgency=medium
+
+  * Imported Upstream version 72+dfsg1
+  * Revert "Fix d/rules for r67"
+  * Remove all examples from libjs-three package
+
+ -- Rémi Palancher <remi-externe.palancher@edf.fr>  Thu, 04 Feb 2016 11:27:09 +0100
+
 three.js (67+dfsg1-1) unstable; urgency=medium
 
   * Back to upstream version 67+dfsg1
