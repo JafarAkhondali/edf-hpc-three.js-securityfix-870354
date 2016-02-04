@@ -4,7 +4,6 @@
 
 THREE.XHRLoader = function ( manager ) {
 
-	this.cache = new THREE.Cache();
 	this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 
 };
@@ -17,29 +16,36 @@ THREE.XHRLoader.prototype = {
 
 		var scope = this;
 
-		var cached = scope.cache.get( url );
+		var cached = THREE.Cache.get( url );
 
 		if ( cached !== undefined ) {
 
-			onLoad( cached );
-			return;
+			if ( onLoad ) {
+
+				setTimeout( function () {
+
+					onLoad( cached );
+
+				}, 0 );
+
+			}
+
+			return cached;
 
 		}
 
 		var request = new XMLHttpRequest();
+		request.open( 'GET', url, true );
 
-		if ( onLoad !== undefined ) {
+		request.addEventListener( 'load', function ( event ) {
 
-			request.addEventListener( 'load', function ( event ) {
+			THREE.Cache.add( url, this.response );
 
-				scope.cache.add( url, event.target.responseText );
+			if ( onLoad ) onLoad( this.response );
 
-				onLoad( event.target.responseText );
-				scope.manager.itemEnd( url );
+			scope.manager.itemEnd( url );
 
-			}, false );
-
-		}
+		}, false );
 
 		if ( onProgress !== undefined ) {
 
@@ -51,28 +57,41 @@ THREE.XHRLoader.prototype = {
 
 		}
 
-		if ( onError !== undefined ) {
+		request.addEventListener( 'error', function ( event ) {
 
-			request.addEventListener( 'error', function ( event ) {
+			if ( onError ) onError( event );
 
-				onError( event );
+			scope.manager.itemError( url );
 
-			}, false );
-
-		}
+		}, false );
 
 		if ( this.crossOrigin !== undefined ) request.crossOrigin = this.crossOrigin;
+		if ( this.responseType !== undefined ) request.responseType = this.responseType;
+		if ( this.withCredentials !== undefined ) request.withCredentials = this.withCredentials;
 
-		request.open( 'GET', url, true );
 		request.send( null );
 
 		scope.manager.itemStart( url );
+
+		return request;
+
+	},
+
+	setResponseType: function ( value ) {
+
+		this.responseType = value;
 
 	},
 
 	setCrossOrigin: function ( value ) {
 
 		this.crossOrigin = value;
+
+	},
+
+	setWithCredentials: function ( value ) {
+
+		this.withCredentials = value;
 
 	}
 
